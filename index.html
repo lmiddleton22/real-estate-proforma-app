@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Estate Investment Proforma (V4)</title>
+    <title>Real Estate Investment Proforma (V5)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -582,6 +582,30 @@
             return (num || 0).toFixed(2) + 'x';
         };
 
+        // --- CORE UTILITIES: ENCODING/DECODING ---
+        // Converts the inputs object to a URL-safe Base64 string
+        const encodeInputs = (inputs) => {
+            try {
+                const json = JSON.stringify(inputs);
+                return btoa(json);
+            } catch (e) {
+                console.error("Error encoding data:", e);
+                return '';
+            }
+        };
+
+        // Converts the URL-safe Base64 string back to an inputs object
+        const decodeInputs = (encodedString) => {
+            try {
+                const json = atob(encodedString);
+                return JSON.parse(json);
+            } catch (e) {
+                console.error("Error decoding data:", e);
+                return null;
+            }
+        };
+
+
         // --- Core Functions ---
 
         // Function to calculate IRR (approximation)
@@ -604,51 +628,52 @@
             document.getElementById('hybridEquityCapitalPct'),
             document.getElementById('hybridEquityShare'),
             document.getElementById('acquisitionCostsPct')
-        ].filter(el => el); // Filter out any elements that might be null
+        ].filter(el => el);
 
 
         let currentResults = {}; // Store results for the report
 
         // --- Core Calculation Logic (Simplified for Hybrid only) ---
-        function calculateProforma() {
-            // 1. Get Inputs and Convert to Decimals/Numbers
-            const PP = parseFloat(document.getElementById('purchasePrice').value) || 0;
-            const RB = parseFloat(document.getElementById('renovationBudget').value) || 0;
-            const C_pct = (parseFloat(document.getElementById('contingencyPct').value) / 100) || 0;
-            const AC_pct = (parseFloat(document.getElementById('acquisitionCostsPct').value) / 100) || 0; 
+        function calculateProforma(inputValues = null) {
             
-            const T_permit = parseFloat(document.getElementById('permitMonths').value) || 0;
-            const T_const = parseFloat(document.getElementById('constructionMonths').value) || 0;
+            // If inputValues are provided (from URL), use them; otherwise, read from DOM
+            const getVal = (id) => inputValues ? inputValues[id] : (document.getElementById(id)?.value || 0);
+
+            // 1. Get Inputs and Convert to Decimals/Numbers
+            const PP = parseFloat(getVal('purchasePrice')) || 0;
+            const RB = parseFloat(getVal('renovationBudget')) || 0;
+            const C_pct = (parseFloat(getVal('contingencyPct')) / 100) || 0;
+            const AC_pct = (parseFloat(getVal('acquisitionCostsPct')) / 100) || 0; 
+            
+            const T_permit = parseFloat(getVal('permitMonths')) || 0;
+            const T_const = parseFloat(getVal('constructionMonths')) || 0;
             const T_total = T_permit + T_const;
             const T_Years = T_total / 12; 
-            const R_monthly = parseFloat(document.getElementById('monthlyRent').value) || 0;
+            const R_monthly = parseFloat(getVal('monthlyRent')) || 0;
 
-            const P_LTV = (parseFloat(document.getElementById('pLoanLTV').value) / 100) || 0;
-            const P_Rate = (parseFloat(document.getElementById('pLoanRate').value) / 100) || 0;
-            const P_Points = (parseFloat(document.getElementById('pLoanPoints').value) / 100) || 0;
+            const P_LTV = (parseFloat(getVal('pLoanLTV')) / 100) || 0;
+            const P_Rate = (parseFloat(getVal('pLoanRate')) / 100) || 0;
+            const P_Points = (parseFloat(getVal('pLoanPoints')) / 100) || 0;
 
-            const C_LTC = (parseFloat(document.getElementById('cLoanLTC').value) / 100) || 0;
-            const C_Rate = (parseFloat(document.getElementById('cLoanRate').value) / 100) || 0;
-            const C_Points = (parseFloat(document.getElementById('cLoanPoints').value) / 100) || 0;
+            const C_LTC = (parseFloat(getVal('cLoanLTC')) / 100) || 0;
+            const C_Rate = (parseFloat(getVal('cLoanRate')) / 100) || 0;
+            const C_Points = (parseFloat(getVal('cLoanPoints')) / 100) || 0;
 
-            const R_Sale = parseFloat(document.getElementById('resalePrice').value) || 0;
-            const SC_Comm_pct = (parseFloat(document.getElementById('salesCommissionPct').value) / 100) || 0;
-            const SC_Other_pct = (parseFloat(document.getElementById('otherSellingCostsPct').value) / 100) || 0;
+            const R_Sale = parseFloat(getVal('resalePrice')) || 0;
+            const SC_Comm_pct = (parseFloat(getVal('salesCommissionPct')) / 100) || 0;
+            const SC_Other_pct = (parseFloat(getVal('otherSellingCostsPct')) / 100) || 0;
 
             // Hybrid Structure Inputs 
-            const H_Debt_P = parseFloat(document.getElementById('hybridDebtAmount').value) || 0;
-            const H_Debt_IRR = (parseFloat(document.getElementById('hybridDebtIRR').value) / 100) || 0;
-            const H_Equity_Capital_pct = (parseFloat(document.getElementById('hybridEquityCapitalPct').value) / 100) || 0; 
-            const H_Equity_Share_pct = (parseFloat(document.getElementById('hybridEquityShare').value) / 100) || 0;
+            const H_Debt_P = parseFloat(getVal('hybridDebtAmount')) || 0;
+            const H_Debt_IRR = (parseFloat(getVal('hybridDebtIRR')) / 100) || 0;
+            const H_Equity_Capital_pct = (parseFloat(getVal('hybridEquityCapitalPct')) / 100) || 0; 
+            const H_Equity_Share_pct = (parseFloat(getVal('hybridEquityShare')) / 100) || 0;
 
 
             // --- CORE CALCULATIONS ---
             const C_Amount = RB * C_pct;
             const AC_Amount = PP * AC_pct;
             const R_Income = R_monthly * T_permit; 
-            
-            document.getElementById('contingencyPctDisplay').textContent = formatPercent(C_pct * 100);
-            document.getElementById('acquisitionCostsPctDisplay').textContent = formatPercent(AC_pct * 100);
 
             // Loans & Financing Costs
             const L_P = PP * P_LTV;
@@ -665,14 +690,11 @@
             // Selling Costs
             const SC_Comm = R_Sale * SC_Comm_pct;
             const SC_Other = R_Sale * SC_Other_pct;
-            const SC_Total = SC_Comm + SC_Other;
-            document.getElementById('salesCommissionPctDisplay').textContent = formatPercent(SC_Comm_pct * 100);
-            document.getElementById('otherSellingCostsPctDisplay').textContent = formatPercent(SC_Other_pct * 100);
-            const TC_Selling = SC_Total; 
+            const SC_Total = SC_Comm + SC_Other; 
 
             // Total Project Costs & Equity Required
             const TC_Hard = PP + RB + C_Amount + AC_Amount;
-            const TC_AllIn = TC_Hard + TC_Financing + TC_Selling;
+            const TC_AllIn = TC_Hard + TC_Financing + SC_Total;
             const E_DownPayment = PP * (1 - P_LTV);
             const E_Required = E_DownPayment + AC_Amount + P_Total + I_Total + C_Amount; // Total Cash Equity Needed
 
@@ -718,68 +740,85 @@
                 TC_AllIn, R_Sale, E_Required, P_Total_Project, T_total, TC_Financing, TC_Selling: SC_Total, P_Total, I_Total,
                 Dev_Equity: Dev_Equity_Cash, Inv_Equity: Inv_Equity_Cash, Dev_Profit, Inv_Profit, Dev_Total_Return, Inv_Total_Return,
                 Inv_Mult, Inv_AR, Inv_IRR, R_Income, PP, RB, C_Amount, AC_Amount,
-                Address: document.getElementById('propertyAddress').value,
-                Description: document.getElementById('projectDescription').value,
-                Title: document.getElementById('proformaTitle').value
+                Address: getVal('propertyAddress'),
+                Description: getVal('projectDescription'),
+                Title: getVal('proformaTitle')
             };
 
-
-            // --- UPDATE DISPLAY ---
-            document.getElementById('holdingPeriod').textContent = T_total.toFixed(0) + ' months';
-            document.getElementById('totalRentalIncome').textContent = formatCurrency(R_Income);
-            document.getElementById('calcPurchasePrice').textContent = formatCurrency(PP);
-            document.getElementById('calcRenovationBudget').textContent = formatCurrency(RB);
-            document.getElementById('calcContingency').textContent = formatCurrency(C_Amount);
-            document.getElementById('calcAcquisitionCosts').textContent = formatCurrency(AC_Amount);
-            document.getElementById('calcTotalLoanPoints').textContent = formatCurrency(P_Total);
-            document.getElementById('calcTotalInterestExpense').textContent = formatCurrency(I_Total);
-            document.getElementById('calcSalesCommission').textContent = formatCurrency(SC_Comm);
-            document.getElementById('calcOtherSellingCosts').textContent = formatCurrency(SC_Other);
-            document.getElementById('calcTotalProjectCosts').textContent = formatCurrency(TC_AllIn);
-            document.getElementById('pLoanLTVDisplay').textContent = formatPercent(P_LTV * 100);
-            document.getElementById('cLoanLTCDisplay').textContent = formatPercent(C_LTC * 100);
-            document.getElementById('calcPurchaseLoanPrincipal').textContent = formatCurrency(L_P);
-            document.getElementById('calcConstructionLoanPrincipal').textContent = formatCurrency(L_C);
-            document.getElementById('calcTotalPrincipal').textContent = formatCurrency(L_Total);
-            document.getElementById('calcEquityDownPayment').textContent = formatCurrency(E_DownPayment);
-            document.getElementById('cashEquityDownPayment').textContent = formatCurrency(E_DownPayment);
-            document.getElementById('cashAcquisitionCosts').textContent = formatCurrency(AC_Amount);
-            document.getElementById('cashTotalLoanPoints').textContent = formatCurrency(P_Total);
-            document.getElementById('cashTotalInterestExpense').textContent = formatCurrency(I_Total);
-            document.getElementById('cashContingency').textContent = formatCurrency(C_Amount);
-            document.getElementById('calcTotalInvestorCash').textContent = formatCurrency(E_Required);
-            document.getElementById('calcNetSaleProceeds').textContent = formatCurrency(R_Sale - L_Total - SC_Total);
-            document.getElementById('profitRentalIncome').textContent = formatCurrency(R_Income);
-            document.getElementById('calcTotalProjectProfit').textContent = formatCurrency(P_Total_Project);
-
-            // Profit Distribution
-            document.getElementById('partner1-equity').textContent = formatCurrency(Dev_Equity_Cash);
-            document.getElementById('partner2-equity').textContent = formatCurrency(Inv_Equity_Cash);
-            document.getElementById('partner1-profit').textContent = formatCurrency(Dev_Profit);
-            document.getElementById('partner2-profit').textContent = formatCurrency(Inv_Profit);
-            document.getElementById('partner1-total').textContent = formatCurrency(Dev_Total_Return);
-            document.getElementById('partner2-total').textContent = formatCurrency(Inv_Total_Return);
-            
-            // Investor KPIs
-            document.getElementById('partner2EquityMultiple').textContent = formatMultiple(Inv_Mult);
-            document.getElementById('partner2AnnualizedReturn').textContent = formatPercent(Inv_AR);
-            document.getElementById('partner2IRR').textContent = formatPercent(Inv_IRR); // Displaying IRR
+            // --- UPDATE DISPLAY (Only if NOT in Report Mode) ---
+            if (!inputValues) {
+                document.getElementById('holdingPeriod').textContent = T_total.toFixed(0) + ' months';
+                document.getElementById('totalRentalIncome').textContent = formatCurrency(R_Income);
+                document.getElementById('calcPurchasePrice').textContent = formatCurrency(PP);
+                document.getElementById('calcRenovationBudget').textContent = formatCurrency(RB);
+                document.getElementById('contingencyPctDisplay').textContent = formatPercent(C_pct * 100);
+                document.getElementById('acquisitionCostsPctDisplay').textContent = formatPercent(AC_pct * 100);
+                document.getElementById('calcContingency').textContent = formatCurrency(C_Amount);
+                document.getElementById('calcAcquisitionCosts').textContent = formatCurrency(AC_Amount);
+                document.getElementById('calcTotalLoanPoints').textContent = formatCurrency(P_Total);
+                document.getElementById('calcTotalInterestExpense').textContent = formatCurrency(I_Total);
+                document.getElementById('salesCommissionPctDisplay').textContent = formatPercent(SC_Comm_pct * 100);
+                document.getElementById('otherSellingCostsPctDisplay').textContent = formatPercent(SC_Other_pct * 100);
+                document.getElementById('calcSalesCommission').textContent = formatCurrency(SC_Comm);
+                document.getElementById('calcOtherSellingCosts').textContent = formatCurrency(SC_Other);
+                document.getElementById('calcTotalProjectCosts').textContent = formatCurrency(TC_AllIn);
+                document.getElementById('pLoanLTVDisplay').textContent = formatPercent(P_LTV * 100);
+                document.getElementById('cLoanLTCDisplay').textContent = formatPercent(C_LTC * 100);
+                document.getElementById('calcPurchaseLoanPrincipal').textContent = formatCurrency(L_P);
+                document.getElementById('calcConstructionLoanPrincipal').textContent = formatCurrency(L_C);
+                document.getElementById('calcTotalPrincipal').textContent = formatCurrency(L_Total);
+                document.getElementById('calcEquityDownPayment').textContent = formatCurrency(E_DownPayment);
+                document.getElementById('cashEquityDownPayment').textContent = formatCurrency(E_DownPayment);
+                document.getElementById('cashAcquisitionCosts').textContent = formatCurrency(AC_Amount);
+                document.getElementById('cashTotalLoanPoints').textContent = formatCurrency(P_Total);
+                document.getElementById('cashTotalInterestExpense').textContent = formatCurrency(I_Total);
+                document.getElementById('cashContingency').textContent = formatCurrency(C_Amount);
+                document.getElementById('calcTotalInvestorCash').textContent = formatCurrency(E_Required);
+                document.getElementById('calcNetSaleProceeds').textContent = formatCurrency(R_Sale - L_Total - SC_Total);
+                document.getElementById('profitRentalIncome').textContent = formatCurrency(R_Income);
+                document.getElementById('calcTotalProjectProfit').textContent = formatCurrency(P_Total_Project);
+                document.getElementById('partner1-equity').textContent = formatCurrency(Dev_Equity_Cash);
+                document.getElementById('partner2-equity').textContent = formatCurrency(Inv_Equity_Cash);
+                document.getElementById('partner1-profit').textContent = formatCurrency(Dev_Profit);
+                document.getElementById('partner2-profit').textContent = formatCurrency(Inv_Profit);
+                document.getElementById('partner1-total').textContent = formatCurrency(Dev_Total_Return);
+                document.getElementById('partner2-total').textContent = formatCurrency(Inv_Total_Return);
+                document.getElementById('partner2EquityMultiple').textContent = formatMultiple(Inv_Mult);
+                document.getElementById('partner2AnnualizedReturn').textContent = formatPercent(Inv_AR);
+                document.getElementById('partner2IRR').textContent = formatPercent(Inv_IRR);
+            }
+            return currentResults;
         }
-        
-        // --- Report Generation and Copy Logic (Function remains the same) ---
-        function showReportAndCopyLink() {
-            // 1. Calculate the proforma (ensures results are fresh)
-            calculateProforma();
-            const results = currentResults;
 
-            // 2. Build the current, shareable URL (Required for copying)
-            // Note: This URL will only work if the calculator is deployed online (like on GitHub Pages).
-            const currentURL = window.location.href;
+        // Extracts all current input values into a single object for serialization
+        function extractInputValues() {
+            const values = {};
+            inputs.forEach(input => {
+                values[input.id] = input.type === 'textarea' ? input.value : input.value;
+            });
+            return values;
+        }
+
+        
+        // --- Report Generation and Copy Logic ---
+        function showReportAndCopyLink() {
+            // 1. Calculate the proforma (ensures results are fresh) and get inputs
+            calculateProforma();
+            const inputs = extractInputValues();
+
+            // 2. Encode all inputs into a shareable URL parameter
+            const encodedData = encodeInputs(inputs);
+            
+            // Get the clean base URL (without parameters)
+            const baseURL = window.location.href.split('?')[0];
+
+            // Construct the shareable report URL
+            const shareableURL = `${baseURL}?reportData=${encodedData}`;
 
             // 3. Copy the URL to the clipboard
             const tempInput = document.createElement('input');
             document.body.appendChild(tempInput);
-            tempInput.value = currentURL;
+            tempInput.value = shareableURL;
             tempInput.select();
             document.execCommand('copy');
             document.body.removeChild(tempInput);
@@ -789,27 +828,19 @@
             copyMessage.classList.remove('hidden');
             setTimeout(() => copyMessage.classList.add('hidden'), 2000);
 
-            // 5. Populate and show the report (using the original format)
+            // 5. Open the shareable link in a new tab for immediate viewing
+            window.open(shareableURL, '_blank');
+        }
+
+        // Populates and shows the report using the final results object
+        function renderReport(results) {
             const reportDiv = document.getElementById('investorReportView');
             const mainCalculatorDiv = document.getElementById('main-calculator'); 
+            
+            mainCalculatorDiv.classList.add('hidden'); // Hide the calculator
+            reportDiv.classList.remove('hidden');     // Show the report
 
-            if (!results.E_Required) {
-                // If calculations are missing, show error and hide main calculator
-                mainCalculatorDiv.classList.add('hidden');
-                reportDiv.innerHTML = `
-                    <div class="text-center p-8 bg-white max-w-xl mx-auto rounded-lg shadow-xl">
-                        <h2 class="text-2xl font-bold text-red-600">Error: Calculations Missing</h2>
-                        <p class="mt-2 text-gray-600">Please ensure all required input fields are filled correctly.</p>
-                    </div>
-                `;
-                reportDiv.classList.remove('hidden');
-                return;
-            }
-
-            // Hide the main calculator before showing the report view
-            mainCalculatorDiv.classList.add('hidden');
-
-            // Report Population (Report structure remains the same as provided in screenshots)
+            // Report Population
             document.getElementById('reportTitle').textContent = results.Title || "Real Estate Investment Proforma";
             document.getElementById('reportAddress').textContent = results.Address;
             document.getElementById('reportDescription').textContent = results.Description.replace(/\n/g, '<br>');
@@ -832,7 +863,7 @@
             document.getElementById('reportAcquisitionCostsDetail').textContent = formatCurrency(results.AC_Amount);
             document.getElementById('reportLoanPointsDetail').textContent = formatCurrency(results.P_Total);
             document.getElementById('reportTotalFinancingCostsDetail').textContent = formatCurrency(results.TC_Financing);
-            document.getElementById('reportSellingCostsDetail').textContent = formatCurrency(results.SC_Total);
+            document.getElementById('reportSellingCostsDetail').textContent = formatCurrency(results.TC_Selling);
             document.getElementById('reportTotalProjectCostsDetail').textContent = formatCurrency(results.TC_AllIn);
             
             // Profit Calculation
@@ -841,19 +872,35 @@
             document.getElementById('reportLessProjectCostsProfit').textContent = '(' + formatCurrency(results.TC_AllIn) + ')';
             document.getElementById('reportNetProfitFinal').textContent = formatCurrency(results.P_Total_Project);
 
-            // Show the final report view
-            reportDiv.classList.remove('hidden');
             window.scrollTo(0, 0); 
         }
 
-        // Removed hideReport() function completely since the button is gone.
 
-        // --- Event Listeners ---
-        inputs.forEach(input => input.addEventListener('input', calculateProforma));
-
-        // Initial run: Start calculating immediately
+        // --- INITIALIZATION ---
         window.onload = () => {
-            calculateProforma(); 
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('reportData');
+            
+            if (encodedData) {
+                // REPORT MODE: If data exists in the URL, load it and show the report.
+                const inputValues = decodeInputs(encodedData);
+                if (inputValues) {
+                    const results = calculateProforma(inputValues);
+                    renderReport(results);
+                } else {
+                    // Fallback if data is corrupted
+                    document.getElementById('main-calculator').innerHTML = `<h2 class="text-2xl font-bold text-red-600 text-center mt-20">Error: Corrupted Report Link. Please ask the sender to generate a new link.</h2>`;
+                }
+
+            } else {
+                // CALCULATOR MODE: No data in URL, show calculator and attach listeners.
+                document.getElementById('investorReportView').classList.add('hidden'); // Ensure report is hidden
+                document.getElementById('main-calculator').classList.remove('hidden');
+                
+                // Attach listeners and run initial calculation
+                inputs.forEach(input => input.addEventListener('input', calculateProforma));
+                calculateProforma(); 
+            }
         };
     </script>
 
