@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Estate Investment Proforma (V3)</title>
+    <title>Real Estate Investment Proforma (V4)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -357,55 +357,14 @@
             </div>
         </div>
 
-        <!-- Investor Structure -->
+        <!-- Investor Structure (Simplified to Hybrid Only) -->
         <div class="proforma-card">
-            <h2 class="text-2xl font-bold text-blue-600 mb-4">3. Investor Structure & Returns</h2>
-
-            <!-- Structure Selection (Radio Buttons) -->
-            <div class="flex justify-between space-x-2 mb-6 p-3 bg-gray-100 rounded-lg">
-                <label class="flex-1 text-center cursor-pointer">
-                    <input type="radio" name="structure" value="equity" onchange="setStructure('equity')" class="mr-1">
-                    <span class="font-medium">Equity Partner</span>
-                </label>
-                <label class="flex-1 text-center cursor-pointer">
-                    <input type="radio" name="structure" value="debt" onchange="setStructure('debt')" class="mr-1">
-                    <span class="font-medium">Debt Partner (IRR)</span>
-                </label>
-                <label class="flex-1 text-center cursor-pointer">
-                    <input type="radio" name="structure" value="hybrid" checked onchange="setStructure('hybrid')" class="mr-1">
-                    <span class="font-medium">Hybrid Capital & Profit</span>
-                </label>
-            </div>
-
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">3. Investor Structure & Returns (Hybrid Capital)</h2>
 
             <!-- Input Containers -->
-            <div id="equity-inputs" class="p-4 border border-gray-200 rounded-lg hidden">
-                <h3 class="text-xl font-semibold mt-2 mb-3 text-gray-700">Equity Partner Inputs</h3>
-                <div class="input-group">
-                    <label>Investor Profit Share (%)</label>
-                    <input type="number" id="investorProfitShare" value="50" class="input-field">
-                </div>
-            </div>
-
-            <div id="debt-inputs" class="p-4 border border-gray-200 rounded-lg hidden">
-                <h3 class="text-xl font-semibold mt-2 mb-3 text-gray-700">Debt Partner (Promissory Note) Inputs</h3>
-                <div class="input-group">
-                    <label>Debt Partner Investment Principal ($)</label>
-                    <input type="number" id="debtInvestmentAmount" value="1000000" class="input-field">
-                </div>
-                <div class="input-group">
-                    <label>Debt Partner Target IRR (%)</label>
-                    <input type="number" id="debtTargetIRR" value="15" class="input-field">
-                </div>
-                <div class="input-group">
-                    <label>Promote (from Developer's Remaining Profit %)</label>
-                    <input type="number" id="debtPromotePct" value="10" class="input-field">
-                </div>
-            </div>
-
             <div id="hybrid-inputs" class="p-4 border border-gray-200 rounded-lg">
                 <h3 class="text-xl font-semibold mt-2 mb-3 text-gray-700">Hybrid Capital & Profit Inputs</h3>
-                <h4 class="font-bold text-gray-600 mt-4 mb-2">I. Debt Component</h4>
+                <h4 class="font-bold text-gray-600 mt-4 mb-2">I. Debt Component (Promissory Note)</h4>
                 <div class="input-group">
                     <label>Debt Principal Amount ($)</label>
                     <input type="number" id="hybridDebtAmount" value="500000" class="input-field">
@@ -429,29 +388,29 @@
             <h3 class="text-xl font-semibold mt-8 mb-2 text-gray-700">Profit Distribution</h3>
             <div class="bg-yellow-50 p-4 rounded-lg">
                 <div class="result-row text-xl font-extrabold text-black">
-                    <span class="w-1/2" id="partner1-label">Developer's Capital Contribution</span>
+                    <span class="w-1/2">Developer's Capital Contribution</span>
                     <span id="partner1-equity" class="currency-display w-1/2 text-right"></span>
                 </div>
                 <div class="result-row text-xl font-extrabold text-black border-b border-yellow-200">
-                    <span class="w-1/2" id="partner2-label">Investor's Capital Contribution</span>
+                    <span class="w-1/2">Investor's Total Capital (Debt Principal + Equity Share)</span>
                     <span id="partner2-equity" class="currency-display w-1/2 text-right"></span>
                 </div>
 
                 <div class="result-row text-green-700 mt-4">
-                    <span class="w-1/2" id="partner1-profit-label">Developer's Total Profit</span>
+                    <span class="w-1/2">Developer's Total Profit</span>
                     <span id="partner1-profit" class="currency-display w-1/2 text-right"></span>
                 </div>
                 <div class="result-row text-green-700">
-                    <span class="w-1/2" id="partner2-profit-label">Investor's Total Profit/Return</span>
+                    <span class="w-1/2">Investor's Total Profit/Return</span>
                     <span id="partner2-profit" class="currency-display w-1/2 text-right"></span>
                 </div>
 
                 <div class="result-row bg-yellow-200 font-extrabold text-lg mt-4 text-yellow-900">
-                    <span class="w-1/2" id="partner1-total-label">Developer's Total Return</span>
+                    <span class="w-1/2">Developer's Total Return</span>
                     <span id="partner1-total" class="currency-display w-1/2 text-right"></span>
                 </div>
                 <div class="result-row bg-yellow-200 font-extrabold text-lg text-yellow-900">
-                    <span class="w-1/2" id="partner2-total-label">Investor's Total Return (Principal + Profit)</span>
+                    <span class="w-1/2">Investor's Total Return (Principal + Profit)</span>
                     <span id="partner2-total" class="currency-display w-1/2 text-right"></span>
                 </div>
             </div>
@@ -459,12 +418,16 @@
             <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Key Performance Indicators (Investor Only)</h3>
             <div class="bg-indigo-50 p-4 rounded-lg">
                 <div class="result-row">
-                    <span class="w-1/2" id="partner2-multiple-label">Investor Multiple (x)</span>
+                    <span class="w-1/2">Investor Multiple (x)</span>
                     <span id="partner2EquityMultiple" class="currency-display w-1/2 text-right"></span>
                 </div>
                 <div class="result-row">
-                    <span class="w-1/2" id="partner2-annualized-label">Investor Annualized Return (%)</span>
+                    <span class="w-1/2">Investor Annualized Return (%)</span>
                     <span id="partner2AnnualizedReturn" class="currency-display w-1/2 text-right"></span>
+                </div>
+                <div class="result-row">
+                    <span class="w-1/2">Internal Rate of Return (IRR) (%)</span>
+                    <span id="partner2IRR" class="currency-display w-1/2 text-right"></span>
                 </div>
             </div>
         </div>
@@ -622,23 +585,28 @@
         // --- Core Functions ---
 
         // Function to calculate IRR (approximation)
-        // Since we only have end-of-project cash flows, the "IRR" is actually the annualized return,
-        // but we'll include it for completeness as per the original document and use the Annualized Return formula.
-        // The original document's IRR of 20.39% for a 1.45x multiple over 22 months is equivalent to AR.
         const calculateIRR = (multiple, totalMonths) => {
              const T_Years = totalMonths / 12;
              if (multiple <= 1 || T_Years === 0) return 0;
-             // IRR = (Multiple^(1/Years) - 1) * 100
+             // For simplicity in a single-payout model, IRR approximates Annualized Return (AR)
              return (Math.pow(multiple, (1 / T_Years)) - 1) * 100;
         };
 
 
-        // Get all input elements
-        const inputs = Array.from(document.querySelectorAll('.input-field')).concat(
-            document.querySelectorAll('#investorProfitShare, #debtInvestmentAmount, #debtTargetIRR, #debtPromotePct, #propertyAddress, #projectDescription, #hybridDebtAmount, #hybridDebtIRR, #hybridEquityCapitalPct, #hybridEquityShare, #acquisitionCostsPct, #proformaTitle')
-        );
+        // Get all input elements (simplified as there are no radio buttons to exclude)
+        const inputs = [
+            ...document.querySelectorAll('.input-field'),
+            document.getElementById('proformaTitle'),
+            document.getElementById('propertyAddress'),
+            document.getElementById('projectDescription'),
+            document.getElementById('hybridDebtAmount'),
+            document.getElementById('hybridDebtIRR'),
+            document.getElementById('hybridEquityCapitalPct'),
+            document.getElementById('hybridEquityShare'),
+            document.getElementById('acquisitionCostsPct')
+        ].filter(el => el); // Filter out any elements that might be null
 
-        let currentStructure = 'hybrid'; // DEFAULTED TO HYBRID
+
         let currentResults = {}; // Store results for the report
 
         // --- Core Calculation Logic ---
@@ -647,12 +615,12 @@
             const PP = parseFloat(document.getElementById('purchasePrice').value) || 0;
             const RB = parseFloat(document.getElementById('renovationBudget').value) || 0;
             const C_pct = (parseFloat(document.getElementById('contingencyPct').value) / 100) || 0;
-            const AC_pct = (parseFloat(document.getElementById('acquisitionCostsPct').value) / 100) || 0; // NEW: Acquisition as %
+            const AC_pct = (parseFloat(document.getElementById('acquisitionCostsPct').value) / 100) || 0; 
             
             const T_permit = parseFloat(document.getElementById('permitMonths').value) || 0;
             const T_const = parseFloat(document.getElementById('constructionMonths').value) || 0;
             const T_total = T_permit + T_const;
-            const T_Years = T_total / 12; // Total time in years
+            const T_Years = T_total / 12; 
             const R_monthly = parseFloat(document.getElementById('monthlyRent').value) || 0;
 
             const P_LTV = (parseFloat(document.getElementById('pLoanLTV').value) / 100) || 0;
@@ -667,40 +635,32 @@
             const SC_Comm_pct = (parseFloat(document.getElementById('salesCommissionPct').value) / 100) || 0;
             const SC_Other_pct = (parseFloat(document.getElementById('otherSellingCostsPct').value) / 100) || 0;
 
-            // Investor Structure Inputs
-            const I_Share_pct = (parseFloat(document.getElementById('investorProfitShare').value) / 100) || 0;
-            const D_Inv = parseFloat(document.getElementById('debtInvestmentAmount').value) || 0;
-            const D_IRR_target = (parseFloat(document.getElementById('debtTargetIRR').value) / 100) || 0;
-            const D_Promote_pct = (parseFloat(document.getElementById('debtPromotePct').value) / 100) || 0;
+            // Hybrid Structure Inputs (Only option now)
             const H_Debt_P = parseFloat(document.getElementById('hybridDebtAmount').value) || 0;
             const H_Debt_IRR = (parseFloat(document.getElementById('hybridDebtIRR').value) / 100) || 0;
-            const H_Equity_Capital_pct = (parseFloat(document.getElementById('hybridEquityCapitalPct').value) / 100) || 0; // NEW: Equity Capital as %
+            const H_Equity_Capital_pct = (parseFloat(document.getElementById('hybridEquityCapitalPct').value) / 100) || 0; 
             const H_Equity_Share_pct = (parseFloat(document.getElementById('hybridEquityShare').value) / 100) || 0;
 
 
-            // --- CORE CALCULATIONS (Independent of Investor Structure) ---
-            const C_Amount = RB * C_pct; // Contingency dollar amount
-            const AC_Amount = PP * AC_pct; // Acquisition dollar amount
-            const R_Income = R_monthly * T_permit; // Total rental income
+            // --- CORE CALCULATIONS ---
+            const C_Amount = RB * C_pct;
+            const AC_Amount = PP * AC_pct;
+            const R_Income = R_monthly * T_permit; 
             
             document.getElementById('contingencyPctDisplay').textContent = formatPercent(C_pct * 100);
             document.getElementById('acquisitionCostsPctDisplay').textContent = formatPercent(AC_pct * 100);
 
-            // Loan Principals
+            // Loans & Financing Costs
             const L_P = PP * P_LTV;
             const L_C = (RB + C_Amount) * C_LTC;
             const L_Total = L_P + L_C;
-
-            // Loan Points
             const P_P_Amount = L_P * P_Points;
             const P_C_Amount = L_C * C_Points;
-            const P_Total = P_P_Amount + P_C_Amount;
-
-            // Interest Expense
+            const P_Total = P_P_Amount + P_C_Amount; // Total Points
             const I_P = L_P * P_Rate * (T_total / 12);
             const I_C = L_C * C_Rate * (T_const / 12);
-            const I_Total = I_P + I_C;
-            const TC_Financing = P_Total + I_Total; // Total Financing Costs (for report)
+            const I_Total = I_P + I_C; // Total Interest Expense
+            const TC_Financing = P_Total + I_Total; // Total Financing Costs (for report breakdown)
 
             // Selling Costs
             const SC_Comm = R_Sale * SC_Comm_pct;
@@ -708,104 +668,56 @@
             const SC_Total = SC_Comm + SC_Other;
             document.getElementById('salesCommissionPctDisplay').textContent = formatPercent(SC_Comm_pct * 100);
             document.getElementById('otherSellingCostsPctDisplay').textContent = formatPercent(SC_Other_pct * 100);
-            const TC_Selling = SC_Total; // Total Selling Costs (for report)
+            const TC_Selling = SC_Total; 
 
-
-            // Total Project Costs (for report breakdown)
+            // Total Project Costs & Equity Required
             const TC_Hard = PP + RB + C_Amount + AC_Amount;
             const TC_AllIn = TC_Hard + TC_Financing + TC_Selling;
-
-            // Deal Equity Required (Cash Out-of-Pocket)
             const E_DownPayment = PP * (1 - P_LTV);
-            // E_Required: The total cash equity needed for the deal
-            const E_Required = E_DownPayment + AC_Amount + P_Total + I_Total + C_Amount;
+            const E_Required = E_DownPayment + AC_Amount + P_Total + I_Total + C_Amount; // Total Cash Equity Needed
 
-            // Total Project Profit (Before Investor Structure)
-            const P_Total_Project = (R_Sale + R_Income) - TC_AllIn;
+            const P_Total_Project = (R_Sale + R_Income) - TC_AllIn; // Net Project Profit
 
 
-            // --- INVESTOR STRUCTURE CALCULATIONS ---
+            // --- INVESTOR STRUCTURE CALCULATIONS (Hybrid Only) ---
 
-            const Dev_Equity_Cash = 0; // Developer puts in zero cash.
-            let Inv_Equity_Cash = 0; 
-            let Dev_Profit, Inv_Profit;
-            let Inv_Total_Return, Dev_Total_Return;
-            let Investor_Total_Capital = 0; // The denominator for Investor Multiple calculation
+            const Dev_Equity_Cash = 0;
+            
+            // Calculate Equity Capital Amount based on percentage of E_Required
+            const H_Equity_C = E_Required * H_Equity_Capital_pct;
 
-            if (currentStructure === 'equity') {
-                // --- 1. PURE EQUITY ---
-                Inv_Equity_Cash = E_Required; // Investor funds 100% of E_Required.
-                Investor_Total_Capital = Inv_Equity_Cash;
+            const Inv_Equity_Cash = H_Debt_P + H_Equity_C;
+            const Investor_Total_Capital = Inv_Equity_Cash; 
 
-                Dev_Profit = P_Total_Project * (1 - I_Share_pct);
-                Inv_Profit = P_Total_Project * I_Share_pct;
+            // Debt Return Calculation (Paid First, off the top)
+            const H_D_Required_Return_Total = H_Debt_P * Math.pow((1 + H_Debt_IRR), T_Years);
+            const H_D_Total_Profit = H_D_Required_Return_Total - H_Debt_P;
 
-                Inv_Total_Return = Inv_Profit + Inv_Equity_Cash;
-                Dev_Total_Return = Dev_Profit + Dev_Equity_Cash; 
+            // Residual Profit for Equity Split
+            const P_Residual_Equity = P_Total_Project - H_D_Total_Profit;
+            const P_For_Split = Math.max(0, P_Residual_Equity);
 
-            } else if (currentStructure === 'debt') {
-                // --- 2. PURE DEBT (IRR) ---
-                Inv_Equity_Cash = D_Inv; // Investor only contributes the debt amount.
-                Investor_Total_Capital = D_Inv; 
-                
-                // Debt Partner's Required Return (Compounded Future Value)
-                const D_Required_Return_Total = D_Inv * Math.pow((1 + D_IRR_target), T_Years);
-                const D_Total_Profit_Base = D_Required_Return_Total - D_Inv;
+            // Equity Split Calculation
+            const H_E_Inv_Profit = P_For_Split * H_Equity_Share_pct;
+            const H_E_Dev_Profit = P_For_Split * (1 - H_Equity_Share_pct);
 
-                // Pay Promote from Remaining Profit
-                const P_Remaining_After_Base_Debt = P_Total_Project - D_Total_Profit_Base;
-                const P_For_Promote = Math.max(0, P_Remaining_After_Base_Debt); 
-                const D_Promote_Amount = P_For_Promote * D_Promote_pct;
+            // Final Allocation
+            const Inv_Profit = H_D_Total_Profit + H_E_Inv_Profit;
+            const Dev_Profit = H_E_Dev_Profit; 
 
-                Inv_Profit = D_Total_Profit_Base + D_Promote_Amount;
-                Dev_Profit = P_Remaining_After_Base_Debt - D_Promote_Amount;
-
-                Inv_Total_Return = D_Inv + Inv_Profit;
-                Dev_Total_Return = Dev_Profit + Dev_Equity_Cash;
-
-            } else {
-                // --- 3. HYBRID CAPITAL & PROFIT ---
-                
-                // Calculate Equity Capital Amount based on percentage of E_Required
-                const H_Equity_C = E_Required * H_Equity_Capital_pct;
-
-                Inv_Equity_Cash = H_Debt_P + H_Equity_C;
-                Investor_Total_Capital = Inv_Equity_Cash; 
-
-                // Debt Return Calculation (Paid First, out of P_Total_Project)
-                const H_D_Required_Return_Total = H_Debt_P * Math.pow((1 + H_Debt_IRR), T_Years);
-                const H_D_Total_Profit = H_D_Required_Return_Total - H_Debt_P;
-
-                // Residual Profit for Equity Split
-                const P_Residual_Equity = P_Total_Project - H_D_Total_Profit;
-                const P_For_Split = Math.max(0, P_Residual_Equity);
-
-                // Equity Split Calculation
-                const H_E_Inv_Profit = P_For_Split * H_Equity_Share_pct;
-                const H_E_Dev_Profit = P_For_Split * (1 - H_Equity_Share_pct);
-
-                // Final Profit/Return Allocation
-                Inv_Profit = H_D_Total_Profit + H_E_Inv_Profit;
-                Dev_Profit = H_E_Dev_Profit; 
-
-                Inv_Total_Return = Inv_Equity_Cash + Inv_Profit;
-                Dev_Total_Return = Dev_Profit + Dev_Equity_Cash;
-            }
+            const Inv_Total_Return = Inv_Equity_Cash + Inv_Profit;
+            const Dev_Total_Return = Dev_Profit + Dev_Equity_Cash;
 
             // --- KPI's (Investor Only) ---
             const Inv_Mult = Investor_Total_Capital !== 0 ? Inv_Total_Return / Investor_Total_Capital : 0;
-            // Annualized Return (AR) is often simpler and matches the calculation logic of the original proforma screenshot better.
             const Inv_AR = (Inv_Mult > 0 ? (Math.pow(Inv_Mult, (12 / T_total)) - 1) : 0) * 100;
-            // The IRR value is often interchangeable with AR in single-capital-in, single-payout models like this one.
             const Inv_IRR = calculateIRR(Inv_Mult, T_total); 
 
             // Store results globally for report generation
             currentResults = {
-                TC_AllIn, R_Sale, E_Required, P_Total_Project, T_total, TC_Financing, TC_Selling, P_Total, I_Total,
+                TC_AllIn, R_Sale, E_Required, P_Total_Project, T_total, TC_Financing, TC_Selling: SC_Total, P_Total, I_Total,
                 Dev_Equity: Dev_Equity_Cash, Inv_Equity: Inv_Equity_Cash, Dev_Profit, Inv_Profit, Dev_Total_Return, Inv_Total_Return,
                 Inv_Mult, Inv_AR, Inv_IRR, R_Income, PP, RB, C_Amount, AC_Amount,
-                Structure: currentStructure, I_Share_pct, D_Inv, D_IRR_target, D_Promote_pct,
-                H_Debt_P, H_Debt_IRR, H_Equity_C: E_Required * H_Equity_Capital_pct, H_Equity_Share_pct,
                 Address: document.getElementById('propertyAddress').value,
                 Description: document.getElementById('projectDescription').value,
                 Title: document.getElementById('proformaTitle').value
@@ -851,44 +763,19 @@
             // Investor KPIs
             document.getElementById('partner2EquityMultiple').textContent = formatMultiple(Inv_Mult);
             document.getElementById('partner2AnnualizedReturn').textContent = formatPercent(Inv_AR);
-
-            // Conditional Labels
-            if (currentStructure === 'equity') {
-                document.getElementById('partner1-label').textContent = "Developer's Capital Contribution";
-                document.getElementById('partner2-label').textContent = "Investor's Capital Contribution";
-                document.getElementById('partner1-profit-label').textContent = "Developer's Profit Share (" + formatPercent(100 - I_Share_pct * 100) + ")";
-                document.getElementById('partner2-profit-label').textContent = "Investor's Profit Share (" + formatPercent(I_Share_pct * 100) + ")";
-                document.getElementById('partner2-multiple-label').textContent = "Investor Equity Multiple (x)";
-                document.getElementById('partner2-annualized-label').textContent = "Investor Annualized Return (%)";
-            } else if (currentStructure === 'debt') {
-                document.getElementById('partner1-label').textContent = "Developer's Capital Contribution";
-                document.getElementById('partner2-label').textContent = "Debt Partner Investment Principal";
-                document.getElementById('partner1-profit-label').textContent = "Developer's Residual Profit";
-                document.getElementById('partner2-profit-label').textContent = `Debt Partner Total Profit (${formatPercent(D_IRR_target * 100)} IRR + ${formatPercent(D_Promote_pct * 100)} Promote)`;
-                document.getElementById('partner2-multiple-label').textContent = "Debt Partner Multiple (x)";
-                document.getElementById('partner2-annualized-label').textContent = "Debt Partner Annualized Return (%)";
-            } else {
-                document.getElementById('partner1-label').textContent = "Developer's Capital Contribution";
-                document.getElementById('partner2-label').textContent = "Investor's Total Capital (D+E)";
-                document.getElementById('partner1-profit-label').textContent = `Developer's Residual Profit (${formatPercent(100 - H_Equity_Share_pct * 100)} of P.Residual)`;
-                document.getElementById('partner2-profit-label').textContent = `Investor's Total Profit (Debt IRR + Equity Share)`;
-                document.getElementById('partner2-multiple-label').textContent = "Investor Hybrid Multiple (x)";
-                document.getElementById('partner2-annualized-label').textContent = "Investor Annualized Return (%)";
-            }
+            document.getElementById('partner2IRR').textContent = formatPercent(Inv_IRR); // Displaying IRR
         }
         
-        // --- Report Generation and Copy Logic ---
+        // --- Report Generation and Copy Logic (Function remains the same) ---
         function showReportAndCopyLink() {
             // 1. Calculate the proforma (ensures results are fresh)
             calculateProforma();
             const results = currentResults;
 
             // 2. Build the current, shareable URL (Required for copying)
-            // This works because the entire calculator is in one HTML file.
             const currentURL = window.location.href;
 
             // 3. Copy the URL to the clipboard
-            // Note: document.execCommand('copy') is used as navigator.clipboard.writeText may not work in iframes/certain environments.
             const tempInput = document.createElement('input');
             document.body.appendChild(tempInput);
             tempInput.value = currentURL;
@@ -922,7 +809,7 @@
             document.getElementById('reportDevelopersProfit').textContent = formatCurrency(results.Dev_Profit);
             document.getElementById('reportEquityMultiple').textContent = formatMultiple(results.Inv_Mult);
             document.getElementById('reportAnnualizedReturn').textContent = formatPercent(results.Inv_AR);
-            document.getElementById('reportIRR').textContent = formatPercent(results.Inv_IRR); // Using the same AR value for IRR as per original
+            document.getElementById('reportIRR').textContent = formatPercent(results.Inv_IRR); 
 
             // Detailed Financial Breakdown
             document.getElementById('reportHoldingPeriod').textContent = results.T_total.toFixed(0) + ' months';
@@ -950,64 +837,12 @@
             document.getElementById('investorReportView').classList.add('hidden');
         }
 
-        function setStructure(structure) {
-            currentStructure = structure;
-            const equityDiv = document.getElementById('equity-inputs');
-            const debtDiv = document.getElementById('debt-inputs');
-            const hybridDiv = document.getElementById('hybrid-inputs');
-            
-            // Hide all
-            equityDiv.classList.add('hidden');
-            debtDiv.classList.add('hidden');
-            hybridDiv.classList.add('hidden');
-
-            // Show selected
-            if (structure === 'equity') {
-                equityDiv.classList.remove('hidden');
-            } else if (structure === 'debt') {
-                debtDiv.classList.remove('hidden');
-            } else {
-                hybridDiv.classList.remove('hidden');
-            }
-
-            // Update radio button colors (optional, but nice visual feedback)
-            document.querySelectorAll('input[name="structure"]').forEach(radio => {
-                const label = radio.parentElement;
-                if (radio.value === structure) {
-                    label.style.backgroundColor = '#d1fae5'; // Light green for selected
-                    label.style.borderRadius = '0.5rem';
-                } else {
-                    label.style.backgroundColor = 'transparent';
-                }
-            });
-
-            calculateProforma();
-        }
-
-        // Attach event listeners to recalculate on input change
-        // FIX: Combine all NodeLists into a proper array using the spread operator
-        const inputs = [
-            ...document.querySelectorAll('.input-field'),
-            document.getElementById('proformaTitle'),
-            document.getElementById('propertyAddress'),
-            document.getElementById('projectDescription'),
-            document.getElementById('investorProfitShare'),
-            document.getElementById('debtInvestmentAmount'),
-            document.getElementById('debtTargetIRR'),
-            document.getElementById('debtPromotePct'),
-            document.getElementById('hybridDebtAmount'),
-            document.getElementById('hybridDebtIRR'),
-            document.getElementById('hybridEquityCapitalPct'),
-            document.getElementById('hybridEquityShare'),
-            document.getElementById('acquisitionCostsPct') // Ensure the new % field is included
-        ].filter(el => el); // Filter out any elements that might be null if not found
-
+        // --- Event Listeners ---
         inputs.forEach(input => input.addEventListener('input', calculateProforma));
 
-        // Initial run
+        // Initial run: Start calculating immediately
         window.onload = () => {
-            // Set initial structure to hybrid and trigger initial calculation
-            setStructure('hybrid'); 
+            calculateProforma(); 
         };
     </script>
 
