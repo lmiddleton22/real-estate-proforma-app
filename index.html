@@ -555,9 +555,6 @@
                     </div>
                 </div>
             </div>
-            <button class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-md mt-6 no-print" onclick="hideReport()">
-                Return to Calculator
-            </button>
         </div>
     </div>
 
@@ -797,13 +794,12 @@
             const mainCalculatorDiv = document.getElementById('main-calculator'); 
 
             if (!results.E_Required) {
-                // If calculations are missing, show error but hide main calculator
+                // If calculations are missing, show error and hide main calculator
                 mainCalculatorDiv.classList.add('hidden');
                 reportDiv.innerHTML = `
                     <div class="text-center p-8 bg-white max-w-xl mx-auto rounded-lg shadow-xl">
                         <h2 class="text-2xl font-bold text-red-600">Error: Calculations Missing</h2>
                         <p class="mt-2 text-gray-600">Please ensure all required input fields are filled correctly.</p>
-                        <button class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-md mt-6" onclick="hideReport()">Return to Calculator</button>
                     </div>
                 `;
                 reportDiv.classList.remove('hidden');
@@ -850,11 +846,7 @@
             window.scrollTo(0, 0); 
         }
 
-        function hideReport() {
-            document.getElementById('investorReportView').classList.add('hidden');
-            document.getElementById('main-calculator').classList.remove('hidden');
-            window.scrollTo(0, 0);
-        }
+        // Removed hideReport() function completely since the button is gone.
 
         // --- Event Listeners ---
         inputs.forEach(input => input.addEventListener('input', calculateProforma));
