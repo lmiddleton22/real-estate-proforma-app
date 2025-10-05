@@ -369,7 +369,7 @@
                         <h4 class="font-bold text-gray-600 mt-4 mb-2">I. Debt Component (Promissory Note)</h4>
                         <div class="input-group">
                             <label>Debt Principal Amount ($)</label>
-                            <input type="number" id="hybridDebtAmount" value="500000" class="input-field">
+                            <input type="number" id="hybridDebtAmount" value="2367413" class="input-field">
                         </div>
                         <div class="input-group">
                             <label>Debt Target IRR (%)</label>
@@ -617,18 +617,13 @@
              return (Math.pow(multiple, (1 / T_Years)) - 1) * 100;
         };
 
+        // Identify all fields that are text/string inputs
+        const stringInputs = ['proformaTitle', 'propertyAddress', 'projectDescription'];
 
         // Get all inputs that trigger a recalculation
         const inputs = [
             ...document.querySelectorAll('.input-field'),
-            document.getElementById('proformaTitle'),
-            document.getElementById('propertyAddress'),
-            document.getElementById('projectDescription'),
-            document.getElementById('hybridDebtAmount'),
-            document.getElementById('hybridDebtIRR'),
-            document.getElementById('hybridEquityCapitalPct'),
-            document.getElementById('hybridEquityShare'),
-            document.getElementById('acquisitionCostsPct')
+            ...stringInputs.map(id => document.getElementById(id))
         ].filter(el => el);
 
 
@@ -638,37 +633,48 @@
         function calculateProforma(inputValues = null) {
             
             // If inputValues are provided (from URL), use them; otherwise, read from DOM
-            const getVal = (id) => inputValues ? inputValues[id] : (document.getElementById(id)?.value || 0);
+            const getVal = (id) => {
+                // 1. Get raw value
+                let val = inputValues ? inputValues[id] : (document.getElementById(id)?.value || '');
+                
+                // 2. Return string values immediately
+                if (stringInputs.includes(id)) {
+                    return val;
+                }
+
+                // 3. For all other (numeric) fields, parse to float or safely default to 0
+                return parseFloat(val) || 0;
+            };
 
             // 1. Get Inputs and Convert to Decimals/Numbers
-            const PP = parseFloat(getVal('purchasePrice')) || 0;
-            const RB = parseFloat(getVal('renovationBudget')) || 0;
-            const C_pct = (parseFloat(getVal('contingencyPct')) / 100) || 0;
-            const AC_pct = (parseFloat(getVal('acquisitionCostsPct')) / 100) || 0; 
+            const PP = getVal('purchasePrice');
+            const RB = getVal('renovationBudget');
+            const C_pct = getVal('contingencyPct') / 100;
+            const AC_pct = getVal('acquisitionCostsPct') / 100; 
             
-            const T_permit = parseFloat(getVal('permitMonths')) || 0;
-            const T_const = parseFloat(getVal('constructionMonths')) || 0;
-            const T_total = T_permit + T_const;
+            const T_permit = getVal('permitMonths');
+            const T_const = getVal('constructionMonths');
+            const T_total = getVal('permitMonths') + getVal('constructionMonths'); // Read directly again for robust T_total
             const T_Years = T_total / 12; 
-            const R_monthly = parseFloat(getVal('monthlyRent')) || 0;
+            const R_monthly = getVal('monthlyRent');
 
-            const P_LTV = (parseFloat(getVal('pLoanLTV')) / 100) || 0;
-            const P_Rate = (parseFloat(getVal('pLoanRate')) / 100) || 0;
-            const P_Points = (parseFloat(getVal('pLoanPoints')) / 100) || 0;
+            const P_LTV = getVal('pLoanLTV') / 100;
+            const P_Rate = getVal('pLoanRate') / 100;
+            const P_Points = getVal('pLoanPoints') / 100;
 
-            const C_LTC = (parseFloat(getVal('cLoanLTC')) / 100) || 0;
-            const C_Rate = (parseFloat(getVal('cLoanRate')) / 100) || 0;
-            const C_Points = (parseFloat(getVal('cLoanPoints')) / 100) || 0;
+            const C_LTC = getVal('cLoanLTC') / 100;
+            const C_Rate = getVal('cLoanRate') / 100;
+            const C_Points = getVal('cLoanPoints') / 100;
 
-            const R_Sale = parseFloat(getVal('resalePrice')) || 0;
-            const SC_Comm_pct = (parseFloat(getVal('salesCommissionPct')) / 100) || 0;
-            const SC_Other_pct = (parseFloat(getVal('otherSellingCostsPct')) / 100) || 0;
+            const R_Sale = getVal('resalePrice');
+            const SC_Comm_pct = getVal('salesCommissionPct') / 100;
+            const SC_Other_pct = getVal('otherSellingCostsPct') / 100;
 
             // Hybrid Structure Inputs 
-            const H_Debt_P = parseFloat(getVal('hybridDebtAmount')) || 0;
-            const H_Debt_IRR = (parseFloat(getVal('hybridDebtIRR')) / 100) || 0;
-            const H_Equity_Capital_pct = (parseFloat(getVal('hybridEquityCapitalPct')) / 100) || 0; 
-            const H_Equity_Share_pct = (parseFloat(getVal('hybridEquityShare')) / 100) || 0;
+            let H_Debt_P = getVal('hybridDebtAmount'); // Define H_Debt_P as let for dynamic setting
+            const H_Debt_IRR = getVal('hybridDebtIRR') / 100;
+            const H_Equity_Capital_pct = getVal('hybridEquityCapitalPct') / 100; 
+            const H_Equity_Share_pct = getVal('hybridEquityShare') / 100;
 
 
             // --- CORE CALCULATIONS ---
@@ -698,8 +704,17 @@
             const TC_AllIn = TC_Hard + TC_Financing + SC_Total;
             const E_DownPayment = PP * (1 - P_LTV);
             const E_Required = E_DownPayment + AC_Amount + P_Total + I_Total + C_Amount; // Total Cash Equity Needed
-
+            
             const P_Total_Project = (R_Sale + R_Income) - TC_AllIn; // Net Project Profit
+
+            
+            // --- NEW: Default Debt Principal to E_Required on Load (if not reading from report URL) ---
+            if (!inputValues && document.getElementById('hybridDebtAmount').value === '2367413') {
+                 H_Debt_P = E_Required;
+                 // ONLY update the DOM value if we are in calculator mode and the default value is present
+                 document.getElementById('hybridDebtAmount').value = Math.round(H_Debt_P);
+            }
+            // If the user has changed the value, we respect their input (which is already stored in H_Debt_P)
 
 
             // --- INVESTOR STRUCTURE CALCULATIONS (Hybrid Only) ---
@@ -733,7 +748,9 @@
 
             // --- KPI's (Investor Only) ---
             const Inv_Mult = Investor_Total_Capital !== 0 ? Inv_Total_Return / Investor_Total_Capital : 0;
-            const Inv_AR = (Inv_Mult > 0 ? (Math.pow(Inv_Mult, (12 / T_total)) - 1) : 0) * 100;
+            // Robust check for T_total being zero
+            const T_Total_Safe = T_total > 0 ? T_total : 1;
+            const Inv_AR = (Inv_Mult > 0 ? (Math.pow(Inv_Mult, (12 / T_Total_Safe)) - 1) : 0) * 100;
             const Inv_IRR = calculateIRR(Inv_Mult, T_total); 
 
             // Store results globally for report generation
@@ -900,8 +917,15 @@
                 document.getElementById('investorReportView').classList.add('hidden'); // Ensure report is hidden
                 document.getElementById('main-calculator-wrapper').classList.remove('hidden');
                 
-                // Attach listeners and run initial calculation
-                inputs.forEach(input => input.addEventListener('input', calculateProforma));
+                // Attach the robust listener to the document body
+                document.body.addEventListener('input', (event) => {
+                    // Only run calculateProforma if the event target is an input or textarea
+                    if (event.target.closest('.input-field') || stringInputs.includes(event.target.id)) {
+                        calculateProforma();
+                    }
+                });
+                
+                // Initial calculation run after listener is attached
                 calculateProforma(); 
             }
         };
