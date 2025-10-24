@@ -568,7 +568,7 @@
                 setText('out-phase1Costs', formatCurrency(acquisitionAndLoanCosts));
                 setText('out-permitHoldCosts', formatCurrency(totalHoldingCostsPermitPhase));
                 setText('out-lessRentalIncomeP1', `(${formatCurrency(totalRentalIncome)})`);
-                setText('out-totalPhase1Need', formatC(totalPhase1Need));
+                setText('out-totalPhase1Need', formatCurrency(totalPhase1Need));
                 setText('out-phase1Committed', formatCurrency(totalPhase1Committed));
                 setText('out-phase1RemainingGap', formatCurrency(phase1RemainingGap));
 
@@ -590,10 +590,11 @@
             }
         }
         
-        // Renaming formatCurrency to formatC to fix typo from merge
+        /* // This function is no longer needed and was causing the bug. Removing it.
         function formatC(num) {
             return formatCurrency(num);
         }
+        */
 
         // --- Share Link & Read-Only Logic ---
 
@@ -720,4 +721,5 @@
 
 </body>
 </html>
+
 
