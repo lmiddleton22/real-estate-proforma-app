@@ -2,934 +2,722 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Ensures proper rendering and touch zooming on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Estate Investment Proforma (V5)</title>
+    <title>Two-Phase Debt Proforma</title>
+    <!-- Use Tailwind CSS for modern, responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        /* Using Inter font, as recommended */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        .proforma-card {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+        /* Custom styles for dashboard value colors */
+        .value-profit { color: #16a34a; } /* Tailwind green-600 */
+        .value-gap, .value-remaining-gap { color: #dc2626; } /* Tailwind red-600 */
+        .value-surplus { color: #16a34a; } /* Tailwind green-600 */
+        .value-committed { color: #1d4ed8; } /* Tailwind blue-700 */
+        
+        /* Style number inputs to hide arrows on Chrome/Safari/Edge */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
-        .input-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #eee;
+        /* Style number inputs to hide arrows on Firefox */
+        input[type=number] { -moz-appearance: textfield; }
+        
+        /* Styles for the read-only (investor) view */
+        input:disabled, textarea:disabled, select:disabled {
+            background-color: #f9fafb; /* bg-slate-50 */
+            color: #374151; /* text-gray-700 */
+            border-color: #e5e7eb; /* border-gray-200 */
+            -webkit-text-fill-color: #374151;
+            opacity: 1;
+            cursor: default;
         }
-        .input-group:last-child {
-            border-bottom: none;
-        }
-        .result-row {
-            padding: 0.75rem 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-        }
-        .input-field {
-            width: 40%;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 0.5rem;
-            text-align: right;
-            transition: all 0.2s;
-        }
-        /* Override for text inputs that need more width/alignment */
-        .input-field.text-wide {
-            width: 55%;
-            text-align: left;
-        }
-        .input-field:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            outline: none;
-        }
-        .currency-label {
-            width: 15%;
-            text-align: right;
-        }
-        .currency-display {
-            font-weight: 700;
-            color: #1f2937;
-        }
-        .report-header-section {
-            padding: 2rem 0;
-        }
-        .report-header {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1f2937;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #ccc;
-            margin-bottom: 1rem;
-        }
-        .report-metric {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.35rem 0;
-            font-size: 0.95rem;
-        }
-        .report-metric-value {
-            font-weight: 700;
-            text-align: right;
-            color: #1f2937;
-        }
-        .highlight-row {
-            font-weight: 800;
-            font-size: 1.125rem;
-            padding: 0.5rem 0;
-            color: #1e3a8a;
-        }
-        /* Mobile specific styling */
-        @media (max-width: 640px) {
-            .input-group {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .input-group label {
-                margin-bottom: 0.25rem;
-                font-size: 0.9rem;
-            }
-            .input-field, .input-field.text-wide {
-                width: 100%;
-                margin-top: 0.25rem;
-            }
-        }
-        /* Print Styles for Investor Report */
-        @media print {
-            body > *:not(#investorReportView) {
-                display: none;
-            }
-            #investorReportView {
-                position: static !important;
-                display: block !important;
-                margin: 0;
-                box-shadow: none;
-                padding: 0;
-                font-size: 10pt; /* Smaller font for print */
-            }
-            .no-print {
-                display: none;
-            }
-            .report-metric {
-                padding: 0.15rem 0;
-            }
-            .report-header {
-                font-size: 1.2rem;
-            }
+        select:disabled {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 0.5rem; /* Remove padding that was for the arrow */
         }
     </style>
 </head>
-<body class="p-4 sm:p-8">
+<body class="bg-gray-100 p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
-        <!-- START MAIN CALCULATOR WRAPPER (DEFAULT VISIBLE) -->
-        <div id="main-calculator-wrapper">
-            <!-- Editable Proforma Title -->
-            <input type="text" id="proformaTitle" value="Real Estate Investment Proforma" class="text-3xl font-extrabold text-gray-900 mb-6 text-center w-full bg-transparent focus:bg-white p-2 rounded-lg border-2 border-transparent focus:border-blue-300 transition-all">
-            <p class="text-center text-gray-600 mb-8">Dynamic financial model with flexible financing structures and explicit cash flow calculations.</p>
- 
-            <div id="main-calculator"> 
-                <div class="proforma-card">
-                    <h2 class="text-2xl font-bold text-blue-600 mb-4">1. Deal Assumptions & Inputs</h2>
+    <div class="container max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header Section -->
+        <header class="bg-slate-800 text-white p-6 md:p-8 border-b-4 border-blue-500">
+            <h1 class="text-2xl md:text-3xl font-bold">Real Estate Investment Proforma</h1>
+            <p class="text-slate-300 mt-1">Two-Phase Investor Debt Model</p>
+        </header>
 
-                    <!-- Project Information (NEW) -->
-                    <div id="project-info-inputs">
-                        <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Project Information</h3>
+        <!-- Main Content Grid -->
+        <div class="main-content grid grid-cols-1 lg:grid-cols-3">
+            
+            <!-- Form Column (Inputs) -->
+            <div class="form-column lg:col-span-2 p-6 md:p-8 border-r border-gray-200">
+                
+                <div class="form-section mb-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Project & Resale</h3>
+                    <!-- ... Project & Resale inputs ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
                         <div class="input-group">
-                            <label>Property Address</label>
-                            <input type="text" id="propertyAddress" value="240 Birmingham, CA 92007" class="input-field text-wide">
+                            <label for="projectAddress" class="block text-sm font-medium text-gray-700 mb-1">Project Address</label>
+                            <input type="text" id="projectAddress" value="240 Birmingham Dr, Cardiff, CA 92007" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" oninput="calculateProforma()">
                         </div>
-                        <div class="input-group flex-col items-start !border-none pt-4">
-                            <label class="mb-2">Project Description</label>
-                            <textarea id="projectDescription" class="input-field w-full h-32 text-left p-2" rows="4">Highly desirable coastal development project featuring 5 luxury units with projected achievable resale value of $1450/ft. Excellent views and walkability.</textarea>
+                        <div class="input-group">
+                            <label for="projectDescription" class="block text-sm font-medium text-gray-700 mb-1">Project Description</label>
+                            <textarea id="projectDescription" rows="3" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" oninput="calculateProforma()">Demo project: 4.3M purchase, 24-month permit phase, 12-month construction. 4.5M construction budget with a 14.5M resale value.</textarea>
                         </div>
                     </div>
-
-                    <!-- Deal Inputs -->
-                    <div id="deal-inputs">
-                        <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Project Finances</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="input-group">
-                            <label>Purchase Price ($)</label>
-                            <input type="number" id="purchasePrice" value="4000000" class="input-field">
+                            <label for="purchasePrice" class="block text-sm font-medium text-gray-700 mb-1">Purchase Price ($)</label>
+                            <input type="number" id="purchasePrice" value="4300000" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="input-group">
-                            <label>Renovation Budget ($)</label>
-                            <input type="number" id="renovationBudget" value="4304000" class="input-field">
+                            <label for="renovationBudget" class="block text-sm font-medium text-gray-700 mb-1">Renovation Budget ($)</label>
+                            <input type="number" id="renovationBudget" value="4500000" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="input-group">
-                            <label>Contingency (%)</label>
-                            <input type="number" id="contingencyPct" value="5" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>Acquisition & Closing Costs (% of Purchase Price)</label>
-                            <input type="number" id="acquisitionCostsPct" value="1.5" class="input-field">
-                        </div>
-
-                        <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Timeline & Income</h3>
-                        <div class="input-group">
-                            <label>Permit Phase (Months)</label>
-                            <input type="number" id="permitMonths" value="16" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>Construction Phase (Months)</label>
-                            <input type="number" id="constructionMonths" value="14" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>Monthly Rental Income (Permit Phase $)</label>
-                            <input type="number" id="monthlyRent" value="10000" class="input-field">
-                        </div>
-
-                        <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Purchase Loan (P)</h3>
-                        <div class="input-group">
-                            <label>P-Loan LTV (%)</label>
-                            <input type="number" id="pLoanLTV" value="80" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>P-Loan Interest Rate (%)</label>
-                            <input type="number" id="pLoanRate" value="10" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>P-Loan Points (%)</label>
-                            <input type="number" id="pLoanPoints" value="0" class="input-field">
-                        </div>
-
-                        <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Construction Loan (C)</h3>
-                        <div class="input-group">
-                            <label>C-Loan LTC (%) on (Renovation + Contingency)</label>
-                            <input type="number" id="cLoanLTC" value="100" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>C-Loan Interest Rate (%)</label>
-                            <input type="number" id="cLoanRate" value="10" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>C-Loan Points (%)</label>
-                            <input type="number" id="cLoanPoints" value="2" class="input-field">
-                        </div>
-
-                        <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Sale Assumptions</h3>
-                        <div class="input-group">
-                            <label>Expected Resale Price ($)</label>
-                            <input type="number" id="resalePrice" value="14250000" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>Sales Commission (% of Sale Price)</label>
-                            <input type="number" id="salesCommissionPct" value="3" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>Other Selling Costs (% of Sale Price)</label>
-                            <input type="number" id="otherSellingCostsPct" value="1" class="input-field">
-                        </div>
-                    </div>
-                    
-                    <button id="generateReportBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md mt-6" onclick="showReportAndCopyLink()">
-                        Open/Copy Shareable Link for Investor Report
-                    </button>
-                    <p id="copyMessage" class="text-center text-sm text-green-600 mt-2 hidden">Link copied to clipboard!</p>
-                </div>
-
-                <!-- Detailed Breakdown -->
-                <div class="proforma-card">
-                    <h2 class="text-2xl font-bold text-blue-600 mb-4">2. Detailed Financial Breakdown</h2>
-
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-xl font-semibold mb-2">Summary Metrics</h3>
-                        <div class="result-row text-green-700 border-b border-green-200">
-                            <span class="w-1/2">Total Holding Period (Months)</span>
-                            <span id="holdingPeriod" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row text-green-700">
-                            <span class="w-1/2">Total Rental Income ($)</span>
-                            <span id="totalRentalIncome" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                    </div>
-
-                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Project Costs (All-In)</h3>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <div class="result-row">
-                            <span class="w-1/2">Purchase Price</span>
-                            <span id="calcPurchasePrice" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">Renovation Budget</span>
-                            <span id="calcRenovationBudget" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row border-b border-gray-200">
-                            <span class="w-1/2">Construction Contingency (<span id="contingencyPctDisplay"></span>)</span>
-                            <span id="calcContingency" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">Acquisition & Closing Costs (<span id="acquisitionCostsPctDisplay"></span>)</span>
-                            <span id="calcAcquisitionCosts" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2 text-red-600">Total Loan Points (P + C)</span>
-                            <span id="calcTotalLoanPoints" class="currency-display w-1/2 text-right text-red-600"></span>
-                        </div>
-                        <div class="result-row border-b border-gray-200">
-                            <span class="w-1/2 text-red-600">Total Interest Expense (P + C)</span>
-                            <span id="calcTotalInterestExpense" class="currency-display w-1/2 text-right text-red-600"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">Sales Commission (<span id="salesCommissionPctDisplay"></span>)</span>
-                            <span id="calcSalesCommission" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row border-b border-gray-200">
-                            <span class="w-1/2">Other Selling Costs (<span id="otherSellingCostsPctDisplay"></span>)</span>
-                            <span id="calcOtherSellingCosts" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row bg-blue-100 font-bold text-lg text-blue-800">
-                            <span class="w-1/2">TOTAL PROJECT COSTS (ALL-IN)</span>
-                            <span id="calcTotalProjectCosts" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                    </div>
-
-                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Financing Summary</h3>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <div class="result-row">
-                            <span class="w-1/2">Purchase Loan Principal (<span id="pLoanLTVDisplay"></span>)</span>
-                            <span id="calcPurchaseLoanPrincipal" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row border-b border-gray-200">
-                            <span class="w-1/2">Construction Loan Principal (<span id="cLoanLTCDisplay"></span>)</span>
-                            <span id="calcConstructionLoanPrincipal" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row bg-blue-50 font-bold">
-                            <span class="w-1/2">TOTAL LOAN PRINCIPAL</span>
-                            <span id="calcTotalPrincipal" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row text-red-600">
-                            <span class="w-1/2">EQUITY DOWN PAYMENT REQUIRED (Initial)</span>
-                            <span id="calcEquityDownPayment" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                    </div>
-
-                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Deal Equity Required (Total Out-of-Pocket)</h3>
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <div class="result-row">
-                            <span class="w-1/2">1. Equity Down Payment</span>
-                            <span id="cashEquityDownPayment" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">2. Acquisition & Closing Costs</span>
-                            <span id="cashAcquisitionCosts" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">3. Total Loan Points (P + C)</span>
-                            <span id="cashTotalLoanPoints" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">4. Total Interest Expense (30 months)</span>
-                            <span id="cashTotalInterestExpense" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row border-b border-blue-200">
-                            <span class="w-1/2">5. Construction Contingency Fund</span>
-                            <span id="cashContingency" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row bg-blue-200 font-extrabold text-lg text-blue-900">
-                            <span class="w-1/2">TOTAL DEAL EQUITY REQUIRED</span>
-                            <span id="calcTotalInvestorCash" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                    </div>
-
-                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Project Profitability</h3>
-                    <div class="bg-green-50 p-4 rounded-lg">
-                        <div class="result-row">
-                            <span class="w-1/2">Net Sale Proceeds (Sale Price - Loan Principal - Selling Costs)</span>
-                            <span id="calcNetSaleProceeds" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row border-b border-green-200">
-                            <span class="w-1/2">PLUS: Total Rental Income</span>
-                            <span id="profitRentalIncome" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row bg-green-200 font-extrabold text-lg text-green-900">
-                            <span class="w-1/2">TOTAL PROJECT PROFIT (Before Investor Structure)</span>
-                            <span id="calcTotalProjectProfit" class="currency-display w-1/2 text-right"></span>
+                            <label for="expectedResalePrice" class="block text-sm font-medium text-gray-700 mb-1">Expected Resale Price ($)</label>
+                            <input type="number" id="expectedResalePrice" value="14500000" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
                 </div>
 
-                <!-- Investor Structure (Simplified to Hybrid Only) -->
-                <div class="proforma-card">
-                    <h2 class="text-2xl font-bold text-blue-600 mb-4">3. Investor Structure & Returns (Hybrid Capital)</h2>
-
-                    <!-- Input Containers -->
-                    <div id="hybrid-inputs" class="p-4 border border-gray-200 rounded-lg">
-                        <h3 class="text-xl font-semibold mt-2 mb-3 text-gray-700">Hybrid Capital & Profit Inputs</h3>
-                        <h4 class="font-bold text-gray-600 mt-4 mb-2">I. Debt Component (Promissory Note)</h4>
+                <div class="form-section mb-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Project Timeline</h3>
+                    <!-- ... Project Timeline inputs ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="input-group">
-                            <label>Debt Principal Amount ($)</label>
-                            <input type="number" id="hybridDebtAmount" value="2367413" class="input-field">
+                            <label for="permitPhaseMonths" class="block text-sm font-medium text-gray-700 mb-1">Permit Phase (Months)</label>
+                            <input type="number" id="permitPhaseMonths" value="24" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="input-group">
-                            <label>Debt Target IRR (%)</label>
-                            <input type="number" id="hybridDebtIRR" value="12" class="input-field">
-                        </div>
-                        <h4 class="font-bold text-gray-600 mt-6 mb-2">II. Equity Component</h4>
-                        <div class="input-group">
-                            <label>Equity Capital Share (% of Deal Equity Required)</label>
-                            <input type="number" id="hybridEquityCapitalPct" value="30" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label>Equity Profit Share (%) of Residual Profit</label>
-                            <input type="number" id="hybridEquityShare" value="30" class="input-field">
-                        </div>
-                    </div>
-
-
-                    <h3 class="text-xl font-semibold mt-8 mb-2 text-gray-700">Profit Distribution</h3>
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                        <div class="result-row text-xl font-extrabold text-black">
-                            <span class="w-1/2">Developer's Capital Contribution</span>
-                            <span id="partner1-equity" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row text-xl font-extrabold text-black border-b border-yellow-200">
-                            <span class="w-1/2">Investor's Total Capital (Debt Principal + Equity Share)</span>
-                            <span id="partner2-equity" class="currency-display w-1/2 text-right"></span>
-                        </div>
-
-                        <div class="result-row text-green-700 mt-4">
-                            <span class="w-1/2">Developer's Total Profit</span>
-                            <span id="partner1-profit" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row text-green-700">
-                            <span class="w-1/2">Investor's Total Profit/Return</span>
-                            <span id="partner2-profit" class="currency-display w-1/2 text-right"></span>
-                        </div>
-
-                        <div class="result-row bg-yellow-200 font-extrabold text-lg mt-4 text-yellow-900">
-                            <span class="w-1/2">Developer's Total Return</span>
-                            <span id="partner1-total" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row bg-yellow-200 font-extrabold text-lg text-yellow-900">
-                            <span class="w-1/2">Investor's Total Return (Principal + Profit)</span>
-                            <span id="partner2-total" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                    </div>
-
-                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Key Performance Indicators (Investor Only)</h3>
-                    <div class="bg-indigo-50 p-4 rounded-lg">
-                        <div class="result-row">
-                            <span class="w-1/2">Investor Multiple (x)</span>
-                            <span id="partner2EquityMultiple" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">Investor Annualized Return (%)</span>
-                            <span id="partner2AnnualizedReturn" class="currency-display w-1/2 text-right"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="w-1/2">Internal Rate of Return (IRR) (%)</span>
-                            <span id="partner2IRR" class="currency-display w-1/2 text-right"></span>
+                            <label for="constructionPhaseMonths" class="block text-sm font-medium text-gray-700 mb-1">Construction Phase (Months)</label>
+                            <input type="number" id="constructionPhaseMonths" value="12" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
                 </div>
+
+                <div class="form-section mb-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Rental Income (Permit Phase)</h3>
+                    <!-- ... Rental Income inputs ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label for="rentalIncomeMonthly" class="block text-sm font-medium text-gray-700 mb-1">Monthly Rent ($)</label>
+                            <input type="number" id="rentalIncomeMonthly" value="0" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="rentalMonths" class="block text-sm font-medium text-gray-700 mb-1">Months Rented</label>
+                            <input type="number" id="rentalMonths" value="0" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Phase 1: Purchase / Bridge Loan</h3>
+                    <!-- ... Phase 1 Loan inputs ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="input-group">
+                            <label for="purchaseLoanLTV" class="block text-sm font-medium text-gray-700 mb-1">LTV (%)</label>
+                            <input type="number" id="purchaseLoanLTV" value="80" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="purchaseLoanInterestRate" class="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
+                            <input type="number" id="purchaseLoanInterestRate" value="9.5" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="purchaseLoanPoints" class="block text-sm font-medium text-gray-700 mb-1">Points (%)</label>
+                            <input type="number" id="purchaseLoanPoints" value="1" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Phase 2: Construction Loan</h3>
+                    <!-- ... Phase 2 Loan inputs ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="input-group">
+                            <label for="constructionLoanLTV" class="block text-sm font-medium text-gray-700 mb-1">LTV of Resale Price (%)</label>
+                            <input type="number" id="constructionLoanLTV" value="70" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="constructionLoanInterestRate" class="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
+                            <input type="number" id="constructionLoanInterestRate" value="9.5" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="constructionLoanPoints" class="block text-sm font-medium text-gray-700 mb-1">Points (%)</label>
+                            <input type="number" id="constructionLoanPoints" value="1" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Investor Commitments Section -->
+                <div class="form-section mb-6">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-300">
+                        <h3 class="text-xl font-semibold text-blue-600">Investor Commitments</h3>
+                        <button id="addInvestorButton" class="bg-blue-600 text-white px-3 py-1 rounded-md font-semibold hover:bg-blue-700 transition text-sm">
+                            + Add Investor
+                        </button>
+                    </div>
+                    <div id="investorList" class="space-y-3">
+                        <!-- Investor template row (will be cloned by JS) -->
+                    </div>
+                    <!-- Example of what JS will create -->
+                    <!-- 
+                    <div class="investor-row grid grid-cols-12 gap-2 items-center p-2 bg-gray-50 rounded-md border">
+                        <div class="col-span-4">
+                            <label class="block text-xs font-medium text-gray-600">Amount ($)</label>
+                            <input type="number" data-id="amount" value="500000" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" oninput="calculateProforma()">
+                        </div>
+                        <div class="col-span-3">
+                            <label class="block text-xs font-medium text-gray-600">Rate (%)</label>
+                            <input type="number" data-id="rate" value="12" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" oninput="calculateProforma()">
+                        </div>
+                        <div class="col-span-4">
+                            <label class="block text-xs font-medium text-gray-600">Phase</label>
+                            <select data-id="phase" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" oninput="calculateProforma()">
+                                <option value="1">Phase 1: Permit</option>
+                                <option value="2">Phase 2: Construction</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1 flex items-end">
+                            <button class="remove-investor-btn text-red-500 hover:text-red-700 p-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    -->
+                </div>
+
+                <div class="form-section mb-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Other Costs</h3>
+                    <!-- ... Other Costs inputs ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="input-group">
+                            <label for="acquisitionCosts" class="block text-sm font-medium text-gray-700 mb-1">Acquisition Costs ($)</label>
+                            <input type="number" id="acquisitionCosts" value="43000" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="salesCommission" class="block text-sm font-medium text-gray-700 mb-1">Sales Commission (%)</label>
+                            <input type="number" id="salesCommission" value="3" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="propertyTaxRate" class="block text-sm font-medium text-gray-700 mb-1">Annual Tax Rate (%)</label>
+                            <input type="number" id="propertyTaxRate" value="1" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                         <div class="input-group">
+                            <label for="monthlyUtilities" class="block text-sm font-medium text-gray-700 mb-1">Monthly Utilities ($)</label>
+                            <input type="number" id="monthlyUtilities" value="300" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="monthlyInsurance" class="block text-sm font-medium text-gray-700 mb-1">Monthly Insurance ($)</label>
+                            <input type="number" id="monthlyInsurance" value="200" oninput="calculateProforma()" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Share Link Section -->
+                <div id="shareSection" class="form-section mt-8">
+                    <!-- ... Share Link inputs ... -->
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4 pb-2 border-b border-gray-300">Share Deal</h3>
+                    <div class="input-group">
+                        <label for="shareLinkInput" class="block text-sm font-medium text-gray-700 mb-1">Shareable Link (Read-Only)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="shareLinkInput" readonly class="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                            <button id="generateLinkButton" class="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition">
+                                Generate & Copy
+                            </button>
+                        </div>
+                        <span id="copyConfirmation" class="text-green-600 text-sm mt-1 hidden">Copied to clipboard!</span>
+                    </div>
+                </div>
+
             </div>
-        </div>
-        <!-- END MAIN CALCULATOR WRAPPER -->
-    </div>
-
-    <!-- Investor Report View (Hidden by default) -->
-    <div id="investorReportView" class="fixed inset-0 bg-white z-50 p-4 sm:p-10 overflow-y-auto hidden">
-        <div class="max-w-4xl mx-auto bg-white">
-            <div class="report-header-section text-center">
-                <h1 id="reportTitle" class="text-3xl font-extrabold mb-1"></h1>
-                <h2 class="text-xl font-normal text-gray-700 mb-6">Investment Opportunity Overview</h2>
-                <h3 id="reportAddress" class="text-xl font-bold text-gray-800 mb-3"></h3>
-                <p id="reportDescription" class="text-gray-600 leading-relaxed max-w-2xl mx-auto"></p>
-            </div>
-
-            <!-- Investor Dashboard Block -->
-            <div class="proforma-card border border-gray-300 shadow-lg p-6 my-8">
-                <h4 class="text-2xl font-bold text-gray-800 mb-4 text-center">Investor Dashboard</h4>
-                <div class="max-w-xl mx-auto space-y-2">
-                    <!-- Project Metrics -->
-                    <div class="report-metric">
-                        <span class="w-1/2 font-semibold">Projected Sale Price</span>
-                        <span id="reportSalePrice" class="report-metric-value text-blue-600"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2 font-semibold">Total Investor Cash Required</span>
-                        <span id="reportInvestorCashRequired" class="report-metric-value text-red-600"></span>
-                    </div>
-                    <div class="highlight-row border-t border-b border-gray-400">
-                        <span class="w-1/2">Total Net Profit</span>
-                        <span id="reportTotalNetProfit" class="report-metric-value text-green-700"></span>
-                    </div>
-                    <!-- Profit Split -->
-                    <div class="report-metric pt-3">
-                        <span class="w-1/2">Investor's Profit</span>
-                        <span id="reportInvestorsProfit" class="report-metric-value text-green-700"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Developer's Profit</span>
-                        <span id="reportDevelopersProfit" class="report-metric-value text-green-700"></span>
-                    </div>
-                    
-                    <h5 class="text-lg font-bold text-center mt-6 pt-3 border-t border-gray-300">Investor's Projected Returns</h5>
-                    <!-- KPI Metrics -->
-                    <div class="report-metric">
-                        <span class="w-1/2">Equity Multiple</span>
-                        <span id="reportEquityMultiple" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Annualized Return</span>
-                        <span id="reportAnnualizedReturn" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Internal Rate of Return (IRR)</span>
-                        <span id="reportIRR" class="report-metric-value"></span>
+            
+            <!-- Dashboard Column (Outputs) -->
+            <div class="dashboard-column lg:col-span-1 bg-slate-50 p-6 md:p-8">
+                
+                <div classs="mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Project Summary</h3>
+                    <!-- ... Project Summary outputs ... -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Projected Sale Price</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-projectedSalePrice">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Rental Income</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-totalRentalIncome">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Project Costs</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-totalProjectCosts">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Developer Profit</span>
+                            <span class="text-2xl font-bold value-profit" id="out-totalNetProfit">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Holding Period</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-totalHoldingPeriod">0 months</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Detailed Financial Breakdown Block -->
-            <div class="proforma-card border border-gray-300 shadow-lg p-6 my-8">
-                <h4 class="text-2xl font-bold text-gray-800 mb-4 text-center">Detailed Financial Breakdown</h4>
-                <div class="max-w-xl mx-auto space-y-1 text-sm">
-                    <div class="report-metric highlight-row !font-semibold !text-gray-800 border-b border-gray-200">
-                        <span class="w-1/2">Holding Period</span>
-                        <span id="reportHoldingPeriod" class="report-metric-value"></span>
-                    </div>
-                    
-                    <!-- Project Costs -->
-                    <h5 class="text-lg font-bold text-gray-700 mt-4 mb-1">Project Costs</h5>
-                    <div class="report-metric">
-                        <span class="w-1/2">Purchase Price</span>
-                        <span id="reportPurchasePriceDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Renovation Budget</span>
-                        <span id="reportRenovationBudgetDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Contingency</span>
-                        <span id="reportContingencyDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Acquisition Costs (Est.)</span>
-                        <span id="reportAcquisitionCostsDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Loan Points</span>
-                        <span id="reportLoanPointsDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Total Financing Costs</span>
-                        <span id="reportTotalFinancingCostsDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric border-b border-gray-200">
-                        <span class="w-1/2">Selling Costs (Est.)</span>
-                        <span id="reportSellingCostsDetail" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric highlight-row !text-gray-900 border-t border-b border-gray-400">
-                        <span class="w-1/2">Total Project Costs</span>
-                        <span id="reportTotalProjectCostsDetail" class="report-metric-value"></span>
-                    </div>
-
-                    <!-- Profit Calculation -->
-                    <h5 class="text-lg font-bold text-gray-700 mt-4 mb-1">Profit Calculation</h5>
-                    <div class="report-metric">
-                        <span class="w-1/2">Projected Sale Price</span>
-                        <span id="reportProjectedSalePriceProfit" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric">
-                        <span class="w-1/2">Plus: Rental Income</span>
-                        <span id="reportRentalIncomeProfit" class="report-metric-value"></span>
-                    </div>
-                    <div class="report-metric border-b border-gray-200">
-                        <span class="w-1/2">Less: Total Project Costs</span>
-                        <span id="reportLessProjectCostsProfit" class="report-metric-value text-red-600"></span>
-                    </div>
-                    <div class="report-metric highlight-row !text-green-700 border-t border-b border-gray-400">
-                        <span class="w-1/2">Net Profit</span>
-                        <span id="reportNetProfitFinal" class="report-metric-value"></span>
+                <!-- UPDATED: Phase 1 Dashboard -->
+                <div class="mt-8 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Phase 1: Initial Investor Raise</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Down Payment</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-downPayment">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Acq. & Loan Costs</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-phase1Costs">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Permit Hold Costs</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-permitHoldCosts">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">(Less Rental Income)</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-lessRentalIncomeP1">(0)</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-blue-200 bg-blue-50 px-2 rounded-md">
+                            <span class="text-sm font-bold text-blue-800">Total Phase 1 Need</span>
+                            <span class="text-lg font-bold text-blue-800" id="out-totalPhase1Need">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Phase 1 Committed</span>
+                            <span class="text-base font-semibold value-committed" id="out-phase1Committed">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-red-200 bg-red-50 px-2 rounded-md">
+                            <span class="text-sm font-bold text-red-800">Phase 1 Remaining Gap</span>
+                            <span class="text-lg font-bold value-remaining-gap" id="out-phase1RemainingGap">$0</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- UPDATED: Phase 2 Dashboard -->
+                <div id="dashboard-phase2" class="mt-8 mb-6 bg-white border-2 border-blue-500 rounded-lg p-5 shadow-md">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Phase 2: Refinance "Gap" Calc</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Funds Needed</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-totalFundsNeeded">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">New Construction Loan</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-newConstructionLoan">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-blue-200 bg-blue-50 px-2 rounded-md">
+                            <span class="text-sm font-bold text-blue-800">Total Phase 2 Need (Gap)</span>
+                            <span class="text-lg font-bold text-blue-800" id="out-totalPhase2Need">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Surplus (to Developer)</span>
+                            <span class="text-base font-semibold value-surplus" id="out-cashToDeveloper">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Phase 2 Committed</span>
+                            <span class="text-base font-semibold value-committed" id="out-phase2Committed">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-red-200 bg-red-50 px-2 rounded-md">
+                            <span class="text-sm font-bold text-red-800">Phase 2 Remaining Gap</span>
+                            <span class="text-lg font-bold value-remaining-gap" id="out-phase2RemainingGap">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPDATED: Investor Summary -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Investor Summary</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Capital Committed</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-totalInvestorCapital">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                            <span class="text-sm font-medium text-gray-600">Total Investor Interest</span>
+                            <span class="text-base font-semibold text-gray-900" id="out-totalInvestorInterest">$0</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
+    <!-- Investor Row HTML Template (for JavaScript) -->
+    <template id="investorRowTemplate">
+        <div class="investor-row grid grid-cols-12 gap-2 items-center p-2 bg-gray-50 rounded-md border">
+            <div class="col-span-4">
+                <label class="block text-xs font-medium text-gray-600">Amount ($)</label>
+                <input type="number" data-id="amount" value="500000" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" oninput="calculateProforma()">
+            </div>
+            <div class="col-span-3">
+                <label class="block text-xs font-medium text-gray-600">Rate (%)</label>
+                <input type="number" data-id="rate" value="12" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" oninput="calculateProforma()">
+            </div>
+            <div class="col-span-4">
+                <label class="block text-xs font-medium text-gray-600">Phase</label>
+                <select data-id="phase" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" oninput="calculateProforma()">
+                    <option value="1">Phase 1: Permit</option>
+                    <option value="2">Phase 2: Construction</option>
+                </select>
+            </div>
+            <div class="col-span-1 flex items-end justify-center">
+                <button type="button" class="remove-investor-btn text-red-500 hover:text-red-700 p-2" onclick="removeInvestorRow(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </template>
 
     <script>
-        // Helper function to format numbers as currency
-        const formatCurrency = (num) => {
-            if (isNaN(num) || num === null) return '$0';
-            // Use Math.round to match the original proforma's style of rounding to the nearest dollar
+        // --- Helper Functions ---
+        function getNum(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            return parseFloat(el.value) || 0;
+        }
+
+        function formatCurrency(num) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
-            }).format(Math.round(num));
-        };
-
-        // Helper function for percentage display
-        const formatPercent = (num) => {
-            return (num || 0).toFixed(2) + '%';
-        };
-
-        // Helper to format multiples
-        const formatMultiple = (num) => {
-            return (num || 0).toFixed(2) + 'x';
-        };
-
-        // --- CORE UTILITIES: ENCODING/DECODING ---
-        // Converts the inputs object to a URL-safe Base64 string
-        const encodeInputs = (inputs) => {
-            try {
-                const json = JSON.stringify(inputs);
-                return btoa(json);
-            } catch (e) {
-                console.error("Error encoding data:", e);
-                return '';
-            }
-        };
-
-        // Converts the URL-safe Base64 string back to an inputs object
-        const decodeInputs = (encodedString) => {
-            try {
-                const json = atob(encodedString);
-                return JSON.parse(json);
-            } catch (e) {
-                console.error("Error decoding data:", e);
-                return null;
-            }
-        };
-
-
-        // --- Core Functions ---
-
-        // Function to calculate IRR (approximation)
-        const calculateIRR = (multiple, totalMonths) => {
-             const T_Years = totalMonths / 12;
-             if (multiple <= 1 || T_Years === 0) return 0;
-             // For simplicity in a single-payout model, IRR approximates Annualized Return (AR)
-             return (Math.pow(multiple, (1 / T_Years)) - 1) * 100;
-        };
-
-        // Identify all fields that are text/string inputs
-        const stringInputs = ['proformaTitle', 'propertyAddress', 'projectDescription'];
-
-        // Get all inputs that trigger a recalculation
-        const inputs = [
-            ...document.querySelectorAll('.input-field'),
-            ...stringInputs.map(id => document.getElementById(id))
-        ].filter(el => el);
-
-
-        let currentResults = {}; // Store results for the report
-
-        // --- Core Calculation Logic (Simplified for Hybrid only) ---
-        function calculateProforma(inputValues = null) {
-            
-            // If inputValues are provided (from URL), use them; otherwise, read from DOM
-            const getVal = (id) => {
-                // 1. Get raw value
-                let val = inputValues ? inputValues[id] : (document.getElementById(id)?.value || '');
-                
-                // 2. Return string values immediately
-                if (stringInputs.includes(id)) {
-                    return val;
-                }
-
-                // 3. For all other (numeric) fields, parse to float or safely default to 0
-                return parseFloat(val) || 0;
-            };
-
-            // 1. Get Inputs and Convert to Decimals/Numbers
-            const PP = getVal('purchasePrice');
-            const RB = getVal('renovationBudget');
-            const C_pct = getVal('contingencyPct') / 100;
-            const AC_pct = getVal('acquisitionCostsPct') / 100; 
-            
-            const T_permit = getVal('permitMonths');
-            const T_const = getVal('constructionMonths');
-            const T_total = getVal('permitMonths') + getVal('constructionMonths'); // Read directly again for robust T_total
-            const T_Years = T_total / 12; 
-            const R_monthly = getVal('monthlyRent');
-
-            const P_LTV = getVal('pLoanLTV') / 100;
-            const P_Rate = getVal('pLoanRate') / 100;
-            const P_Points = getVal('pLoanPoints') / 100;
-
-            const C_LTC = getVal('cLoanLTC') / 100;
-            const C_Rate = getVal('cLoanRate') / 100;
-            const C_Points = getVal('cLoanPoints') / 100;
-
-            const R_Sale = getVal('resalePrice');
-            const SC_Comm_pct = getVal('salesCommissionPct') / 100;
-            const SC_Other_pct = getVal('otherSellingCostsPct') / 100;
-
-            // Hybrid Structure Inputs 
-            let H_Debt_P = getVal('hybridDebtAmount'); // Define H_Debt_P as let for dynamic setting
-            const H_Debt_IRR = getVal('hybridDebtIRR') / 100;
-            const H_Equity_Capital_pct = getVal('hybridEquityCapitalPct') / 100; 
-            const H_Equity_Share_pct = getVal('hybridEquityShare') / 100;
-
-
-            // --- CORE CALCULATIONS ---
-            const C_Amount = RB * C_pct;
-            const AC_Amount = PP * AC_pct;
-            const R_Income = R_monthly * T_permit; 
-
-            // Loans & Financing Costs
-            const L_P = PP * P_LTV;
-            const L_C = (RB + C_Amount) * C_LTC;
-            const L_Total = L_P + L_C;
-            const P_P_Amount = L_P * P_Points;
-            const P_C_Amount = L_C * C_Points;
-            const P_Total = P_P_Amount + P_C_Amount; // Total Points
-            const I_P = L_P * P_Rate * (T_total / 12);
-            const I_C = L_C * C_Rate * (T_const / 12);
-            const I_Total = I_P + I_C; // Total Interest Expense
-            const TC_Financing = P_Total + I_Total; // Total Financing Costs (for report breakdown)
-
-            // Selling Costs
-            const SC_Comm = R_Sale * SC_Comm_pct;
-            const SC_Other = R_Sale * SC_Other_pct;
-            const SC_Total = SC_Comm + SC_Other; 
-
-            // Total Project Costs & Equity Required
-            const TC_Hard = PP + RB + C_Amount + AC_Amount;
-            const TC_AllIn = TC_Hard + TC_Financing + SC_Total;
-            const E_DownPayment = PP * (1 - P_LTV);
-            const E_Required = E_DownPayment + AC_Amount + P_Total + I_Total + C_Amount; // Total Cash Equity Needed
-            
-            const P_Total_Project = (R_Sale + R_Income) - TC_AllIn; // Net Project Profit
-
-            
-            // --- NEW: Default Debt Principal to E_Required on Load (if not reading from report URL) ---
-            if (!inputValues && document.getElementById('hybridDebtAmount').value === '2367413') {
-                 H_Debt_P = E_Required;
-                 // ONLY update the DOM value if we are in calculator mode and the default value is present
-                 document.getElementById('hybridDebtAmount').value = Math.round(H_Debt_P);
-            }
-            // If the user has changed the value, we respect their input (which is already stored in H_Debt_P)
-
-
-            // --- INVESTOR STRUCTURE CALCULATIONS (Hybrid Only) ---
-
-            const Dev_Equity_Cash = 0;
-            
-            // Calculate Equity Capital Amount based on percentage of E_Required
-            const H_Equity_C = E_Required * H_Equity_Capital_pct;
-
-            const Inv_Equity_Cash = H_Debt_P + H_Equity_C;
-            const Investor_Total_Capital = Inv_Equity_Cash; 
-
-            // Debt Return Calculation (Paid First, off the top)
-            const H_D_Required_Return_Total = H_Debt_P * Math.pow((1 + H_Debt_IRR), T_Years);
-            const H_D_Total_Profit = H_D_Required_Return_Total - H_Debt_P;
-
-            // Residual Profit for Equity Split
-            const P_Residual_Equity = P_Total_Project - H_D_Total_Profit;
-            const P_For_Split = Math.max(0, P_Residual_Equity);
-
-            // Equity Split Calculation
-            const H_E_Inv_Profit = P_For_Split * H_Equity_Share_pct;
-            const H_E_Dev_Profit = P_For_Split * (1 - H_Equity_Share_pct);
-
-            // Final Allocation
-            const Inv_Profit = H_D_Total_Profit + H_E_Inv_Profit;
-            const Dev_Profit = H_E_Dev_Profit; 
-
-            const Inv_Total_Return = Inv_Equity_Cash + Inv_Profit;
-            const Dev_Total_Return = Dev_Profit + Dev_Equity_Cash;
-
-            // --- KPI's (Investor Only) ---
-            const Inv_Mult = Investor_Total_Capital !== 0 ? Inv_Total_Return / Investor_Total_Capital : 0;
-            // Robust check for T_total being zero
-            const T_Total_Safe = T_total > 0 ? T_total : 1;
-            const Inv_AR = (Inv_Mult > 0 ? (Math.pow(Inv_Mult, (12 / T_Total_Safe)) - 1) : 0) * 100;
-            const Inv_IRR = calculateIRR(Inv_Mult, T_total); 
-
-            // Store results globally for report generation
-            currentResults = {
-                TC_AllIn, R_Sale, E_Required, P_Total_Project, T_total, TC_Financing, TC_Selling: SC_Total, P_Total, I_Total,
-                Dev_Equity: Dev_Equity_Cash, Inv_Equity: Inv_Equity_Cash, Dev_Profit, Inv_Profit, Dev_Total_Return, Inv_Total_Return,
-                Inv_Mult, Inv_AR, Inv_IRR, R_Income, PP, RB, C_Amount, AC_Amount,
-                Address: getVal('propertyAddress'),
-                Description: getVal('projectDescription'),
-                Title: getVal('proformaTitle')
-            };
-
-            // --- UPDATE DISPLAY (Only if NOT in Report Mode) ---
-            if (!inputValues) {
-                document.getElementById('holdingPeriod').textContent = T_total.toFixed(0) + ' months';
-                document.getElementById('totalRentalIncome').textContent = formatCurrency(R_Income);
-                document.getElementById('calcPurchasePrice').textContent = formatCurrency(PP);
-                document.getElementById('calcRenovationBudget').textContent = formatCurrency(RB);
-                document.getElementById('contingencyPctDisplay').textContent = formatPercent(C_pct * 100);
-                document.getElementById('acquisitionCostsPctDisplay').textContent = formatPercent(AC_pct * 100);
-                document.getElementById('calcContingency').textContent = formatCurrency(C_Amount);
-                document.getElementById('calcAcquisitionCosts').textContent = formatCurrency(AC_Amount);
-                document.getElementById('calcTotalLoanPoints').textContent = formatCurrency(P_Total);
-                document.getElementById('calcTotalInterestExpense').textContent = formatCurrency(I_Total);
-                document.getElementById('salesCommissionPctDisplay').textContent = formatPercent(SC_Comm_pct * 100);
-                document.getElementById('otherSellingCostsPctDisplay').textContent = formatPercent(SC_Other_pct * 100);
-                document.getElementById('calcSalesCommission').textContent = formatCurrency(SC_Comm);
-                document.getElementById('calcOtherSellingCosts').textContent = formatCurrency(SC_Other);
-                document.getElementById('calcTotalProjectCosts').textContent = formatCurrency(TC_AllIn);
-                document.getElementById('pLoanLTVDisplay').textContent = formatPercent(P_LTV * 100);
-                document.getElementById('cLoanLTCDisplay').textContent = formatPercent(C_LTC * 100);
-                document.getElementById('calcPurchaseLoanPrincipal').textContent = formatCurrency(L_P);
-                document.getElementById('calcConstructionLoanPrincipal').textContent = formatCurrency(L_C);
-                document.getElementById('calcTotalPrincipal').textContent = formatCurrency(L_Total);
-                document.getElementById('calcEquityDownPayment').textContent = formatCurrency(E_DownPayment);
-                document.getElementById('cashEquityDownPayment').textContent = formatCurrency(E_DownPayment);
-                document.getElementById('cashAcquisitionCosts').textContent = formatCurrency(AC_Amount);
-                document.getElementById('cashTotalLoanPoints').textContent = formatCurrency(P_Total);
-                document.getElementById('cashTotalInterestExpense').textContent = formatCurrency(I_Total);
-                document.getElementById('cashContingency').textContent = formatCurrency(C_Amount);
-                document.getElementById('calcTotalInvestorCash').textContent = formatCurrency(E_Required);
-                document.getElementById('calcNetSaleProceeds').textContent = formatCurrency(R_Sale - L_Total - SC_Total);
-                document.getElementById('profitRentalIncome').textContent = formatCurrency(R_Income);
-                document.getElementById('calcTotalProjectProfit').textContent = formatCurrency(P_Total_Project);
-                document.getElementById('partner1-equity').textContent = formatCurrency(Dev_Equity_Cash);
-                document.getElementById('partner2-equity').textContent = formatCurrency(Inv_Equity_Cash);
-                document.getElementById('partner1-profit').textContent = formatCurrency(Dev_Profit);
-                document.getElementById('partner2-profit').textContent = formatCurrency(Inv_Profit);
-                document.getElementById('partner1-total').textContent = formatCurrency(Dev_Total_Return);
-                document.getElementById('partner2-total').textContent = formatCurrency(Inv_Total_Return);
-                document.getElementById('partner2EquityMultiple').textContent = formatMultiple(Inv_Mult);
-                document.getElementById('partner2AnnualizedReturn').textContent = formatPercent(Inv_AR);
-                document.getElementById('partner2IRR').textContent = formatPercent(Inv_IRR);
-            }
-            return currentResults;
+            }).format(num);
         }
-
-        // Extracts all current input values into a single object for serialization
-        function extractInputValues() {
-            const values = {};
-            inputs.forEach(input => {
-                values[input.id] = input.type === 'textarea' || input.id === 'proformaTitle' || input.id === 'propertyAddress' || input.id === 'projectDescription' ? input.value : input.value;
-            });
-            return values;
-        }
-
         
-        // --- Report Generation and Copy Logic ---
-        function showReportAndCopyLink() {
-            // 1. Calculate the proforma (ensures results are fresh) and get inputs
+        function setText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function getString(id) {
+            const el = document.getElementById(id);
+            if (!el) return "";
+            return el.value || "";
+        }
+
+        // --- Investor Row Management ---
+        function addInvestorRow(data = { amount: 500000, rate: 12, phase: 1 }) {
+            const template = document.getElementById('investorRowTemplate');
+            const clone = template.content.cloneNode(true);
+            const row = clone.querySelector('.investor-row');
+            
+            row.querySelector('[data-id="amount"]').value = data.amount;
+            row.querySelector('[data-id="rate"]').value = data.rate;
+            row.querySelector('[data-id="phase"]').value = data.phase;
+            
+            document.getElementById('investorList').appendChild(row);
             calculateProforma();
-            const inputs = extractInputValues();
-
-            // 2. Encode all inputs into a shareable URL parameter
-            const encodedData = encodeInputs(inputs);
-            
-            // Get the clean base URL (without parameters)
-            const baseURL = window.location.href.split('?')[0];
-
-            // Construct the shareable report URL
-            const shareableURL = `${baseURL}?reportData=${encodedData}`;
-
-            // 3. Copy the URL to the clipboard
-            const tempInput = document.createElement('input');
-            document.body.appendChild(tempInput);
-            tempInput.value = shareableURL;
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            // 4. Show the copy success message temporarily
-            const copyMessage = document.getElementById('copyMessage');
-            copyMessage.classList.remove('hidden');
-            setTimeout(() => copyMessage.classList.add('hidden'), 2000);
-
-            // 5. Open the shareable link in a new tab for immediate viewing
-            window.open(shareableURL, '_blank');
         }
 
-        // Populates and shows the report using the final results object
-        function renderReport(results) {
-            const reportDiv = document.getElementById('investorReportView');
-            const mainCalculatorWrapperDiv = document.getElementById('main-calculator-wrapper'); 
-            
-            mainCalculatorWrapperDiv.classList.add('hidden'); // Hide the calculator wrapper
-            reportDiv.classList.remove('hidden');             // Show the report
-
-            // Report Population
-            document.getElementById('reportTitle').textContent = results.Title || "Real Estate Investment Proforma";
-            document.getElementById('reportAddress').textContent = results.Address;
-            document.getElementById('reportDescription').textContent = results.Description.replace(/\n/g, '<br>');
-            
-            // Investor Dashboard Metrics
-            document.getElementById('reportSalePrice').textContent = formatCurrency(results.R_Sale);
-            document.getElementById('reportInvestorCashRequired').textContent = formatCurrency(results.E_Required);
-            document.getElementById('reportTotalNetProfit').textContent = formatCurrency(results.P_Total_Project);
-            document.getElementById('reportInvestorsProfit').textContent = formatCurrency(results.Inv_Profit);
-            document.getElementById('reportDevelopersProfit').textContent = formatCurrency(results.Dev_Profit);
-            document.getElementById('reportEquityMultiple').textContent = formatMultiple(results.Inv_Mult);
-            document.getElementById('reportAnnualizedReturn').textContent = formatPercent(results.Inv_AR);
-            document.getElementById('reportIRR').textContent = formatPercent(results.Inv_IRR); 
-
-            // Detailed Financial Breakdown
-            document.getElementById('reportHoldingPeriod').textContent = results.T_total.toFixed(0) + ' months';
-            document.getElementById('reportPurchasePriceDetail').textContent = formatCurrency(results.PP);
-            document.getElementById('reportRenovationBudgetDetail').textContent = formatCurrency(results.RB);
-            document.getElementById('reportContingencyDetail').textContent = formatCurrency(results.C_Amount);
-            document.getElementById('reportAcquisitionCostsDetail').textContent = formatCurrency(results.AC_Amount);
-            document.getElementById('reportLoanPointsDetail').textContent = formatCurrency(results.P_Total);
-            document.getElementById('reportTotalFinancingCostsDetail').textContent = formatCurrency(results.TC_Financing);
-            document.getElementById('reportSellingCostsDetail').textContent = formatCurrency(results.TC_Selling);
-            document.getElementById('reportTotalProjectCostsDetail').textContent = formatCurrency(results.TC_AllIn);
-            
-            // Profit Calculation
-            document.getElementById('reportProjectedSalePriceProfit').textContent = formatCurrency(results.R_Sale);
-            document.getElementById('reportRentalIncomeProfit').textContent = formatCurrency(results.R_Income);
-            document.getElementById('reportLessProjectCostsProfit').textContent = '(' + formatCurrency(results.TC_AllIn) + ')';
-            document.getElementById('reportNetProfitFinal').textContent = formatCurrency(results.P_Total_Project);
-
-            window.scrollTo(0, 0); 
+        function removeInvestorRow(button) {
+            button.closest('.investor-row').remove();
+            calculateProforma();
         }
 
+        function getInvestorData() {
+            const investors = [];
+            document.querySelectorAll('#investorList .investor-row').forEach(row => {
+                investors.push({
+                    amount: parseFloat(row.querySelector('[data-id="amount"]').value) || 0,
+                    rate: parseFloat(row.querySelector('[data-id="rate"]').value) / 100 || 0,
+                    phase: parseInt(row.querySelector('[data-id="phase"]').value) || 1
+                });
+            });
+            return investors;
+        }
 
-        // --- INITIALIZATION ---
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const encodedData = urlParams.get('reportData');
-            
-            if (encodedData) {
-                // REPORT MODE: If data exists in the URL, load it and show the report.
-                document.getElementById('main-calculator-wrapper').style.display = 'none'; // Absolutely hide calculator
-                const inputValues = decodeInputs(encodedData);
-                if (inputValues) {
-                    const results = calculateProforma(inputValues);
-                    renderReport(results);
-                } else {
-                    // Fallback if data is corrupted
-                    document.getElementById('investorReportView').innerHTML = `<div class="text-center p-8 bg-white max-w-xl mx-auto rounded-lg shadow-xl"><h2 class="text-2xl font-bold text-red-600">Error: Corrupted Report Link</h2><p>The link is broken. Please ask the sender to generate a new shareable link.</p></div>`;
-                    document.getElementById('investorReportView').classList.remove('hidden');
-                }
-
-            } else {
-                // CALCULATOR MODE: No data in URL, show calculator and attach listeners.
-                document.getElementById('investorReportView').classList.add('hidden'); // Ensure report is hidden
-                document.getElementById('main-calculator-wrapper').classList.remove('hidden');
+        // --- Main Calculation Function ---
+        function calculateProforma() {
+            try {
+                // --- 1. Get All Inputs ---
+                const purchasePrice = getNum('purchasePrice');
+                const renovationBudget = getNum('renovationBudget');
+                const expectedResalePrice = getNum('expectedResalePrice');
                 
-                // Attach the robust listener to the document body
-                document.body.addEventListener('input', (event) => {
-                    // Only run calculateProforma if the event target is an input or textarea
-                    if (event.target.closest('.input-field') || stringInputs.includes(event.target.id)) {
-                        calculateProforma();
+                const permitPhaseMonths = getNum('permitPhaseMonths');
+                const constructionPhaseMonths = getNum('constructionPhaseMonths');
+                const totalHoldingPeriodMonths = permitPhaseMonths + constructionPhaseMonths;
+
+                const rentalIncomeMonthly = getNum('rentalIncomeMonthly');
+                const rentalMonths = getNum('rentalMonths');
+
+                const purchaseLoanLTV = getNum('purchaseLoanLTV') / 100;
+                const purchaseLoanInterestRate = getNum('purchaseLoanInterestRate') / 100;
+                const purchaseLoanPoints = getNum('purchaseLoanPoints') / 100;
+
+                const constructionLoanLTV = getNum('constructionLoanLTV') / 100;
+                const constructionLoanInterestRate = getNum('constructionLoanInterestRate') / 100;
+                const constructionLoanPoints = getNum('constructionLoanPoints') / 100;
+
+                const acquisitionCosts = getNum('acquisitionCosts');
+                const salesCommission = getNum('salesCommission') / 100;
+                const propertyTaxRate = getNum('propertyTaxRate') / 100;
+                const monthlyUtilities = getNum('monthlyUtilities');
+                const monthlyInsurance = getNum('monthlyInsurance');
+
+                // --- 1b. Calculate Rental Income ---
+                const totalRentalIncome = rentalIncomeMonthly * rentalMonths;
+
+                // --- 2. Phase 1 Calculation (Find Need) ---
+                const purchaseLoanPrincipal = purchasePrice * purchaseLoanLTV;
+                const downPayment = purchasePrice - purchaseLoanPrincipal;
+                const purchaseLoanPointsCost = purchaseLoanPrincipal * purchaseLoanPoints;
+                
+                const purchaseLoanInterestMonthly = purchaseLoanPrincipal * (purchaseLoanInterestRate / 12);
+                const totalPurchaseLoanInterestPermit = purchaseLoanInterestMonthly * permitPhaseMonths;
+                
+                const taxesMonthly = (purchasePrice * propertyTaxRate) / 12;
+                const totalTaxesPermit = taxesMonthly * permitPhaseMonths;
+                
+                const totalUtilitiesPermit = monthlyUtilities * permitPhaseMonths;
+                const totalInsurancePermit = monthlyInsurance * permitPhaseMonths;
+                
+                const totalHoldingCostsPermitPhase = totalPurchaseLoanInterestPermit + totalTaxesPermit + totalUtilitiesPermit + totalInsurancePermit;
+                const acquisitionAndLoanCosts = acquisitionCosts + purchaseLoanPointsCost;
+
+                const totalPhase1Need = downPayment + acquisitionAndLoanCosts + totalHoldingCostsPermitPhase - totalRentalIncome;
+                
+                // --- 3. Process Investors ---
+                const investors = getInvestorData();
+                let totalPhase1Committed = 0;
+                let totalPhase1Interest = 0;
+                let totalPhase2Committed = 0;
+                let totalPhase2Interest = 0;
+
+                investors.forEach(inv => {
+                    if (inv.phase === 1) {
+                        totalPhase1Committed += inv.amount;
+                        totalPhase1Interest += inv.amount * (inv.rate / 12) * permitPhaseMonths;
+                    } else { // Phase 2
+                        totalPhase2Committed += inv.amount;
+                        totalPhase2Interest += inv.amount * (inv.rate / 12) * constructionPhaseMonths;
                     }
                 });
+
+                const phase1RemainingGap = totalPhase1Need - totalPhase1Committed;
+                const investorPhase1Payoff = totalPhase1Committed + totalPhase1Interest;
                 
-                // Initial calculation run after listener is attached
-                calculateProforma(); 
+                // --- 4. Phase 2 Calculation (Find Need) ---
+                const purchaseLoanPayoff = purchaseLoanPrincipal;
+                const totalFundsNeededForRefi = purchaseLoanPayoff + investorPhase1Payoff + renovationBudget;
+                const newConstructionLoanAmount = expectedResalePrice * constructionLoanLTV;
+                
+                const gapOrSurplus = totalFundsNeededForRefi - newConstructionLoanAmount;
+                const totalPhase2Need = Math.max(0, gapOrSurplus);
+                const cashToDeveloperAtRefi = Math.abs(Math.min(0, gapOrSurplus));
+                const phase2RemainingGap = totalPhase2Need - totalPhase2Committed;
+
+                // --- 5. Final Profit Calculation ---
+                const constructionLoanPointsCost = newConstructionLoanAmount * constructionLoanPoints;
+                const constructionLoanInterestMonthly = newConstructionLoanAmount * (constructionLoanInterestRate / 12);
+                const totalConstructionLoanInterest = constructionLoanInterestMonthly * constructionPhaseMonths;
+                
+                const totalTaxesConstruction = taxesMonthly * constructionPhaseMonths;
+                const totalUtilitiesConstruction = monthlyUtilities * constructionPhaseMonths;
+                const totalInsuranceConstruction = monthlyInsurance * constructionPhaseMonths;
+                
+                const sellingCosts = expectedResalePrice * salesCommission;
+                
+                const totalFinancingPoints = purchaseLoanPointsCost + constructionLoanPointsCost;
+                const totalFinancingInterest = totalPurchaseLoanInterestPermit + totalConstructionLoanInterest;
+                const totalTaxes = totalTaxesPermit + totalTaxesConstruction;
+                const totalOtherHolding = totalUtilitiesPermit + totalInsurancePermit + totalUtilitiesConstruction + totalInsuranceConstruction;
+                const totalInvestorInterest = totalPhase1Interest + totalPhase2Interest;
+
+                const grandTotalCosts = 
+                    purchasePrice +
+                    renovationBudget +
+                    acquisitionCosts +
+                    sellingCosts +
+                    totalFinancingPoints +
+                    totalFinancingInterest +
+                    totalTaxes +
+                    totalOtherHolding +
+                    totalInvestorInterest;
+
+                const netProfit = (expectedResalePrice + totalRentalIncome) - grandTotalCosts;
+
+                // --- 6. Update Dashboard ---
+                setText('out-projectedSalePrice', formatCurrency(expectedResalePrice));
+                setText('out-totalRentalIncome', formatCurrency(totalRentalIncome));
+                setText('out-totalProjectCosts', formatCurrency(grandTotalCosts));
+                setText('out-totalNetProfit', formatCurrency(netProfit));
+                setText('out-totalHoldingPeriod', `${totalHoldingPeriodMonths} months`);
+
+                // Phase 1
+                setText('out-downPayment', formatCurrency(downPayment));
+                setText('out-phase1Costs', formatCurrency(acquisitionAndLoanCosts));
+                setText('out-permitHoldCosts', formatCurrency(totalHoldingCostsPermitPhase));
+                setText('out-lessRentalIncomeP1', `(${formatCurrency(totalRentalIncome)})`);
+                setText('out-totalPhase1Need', formatC(totalPhase1Need));
+                setText('out-phase1Committed', formatCurrency(totalPhase1Committed));
+                setText('out-phase1RemainingGap', formatCurrency(phase1RemainingGap));
+
+                // Phase 2
+                setText('out-totalFundsNeeded', formatCurrency(totalFundsNeededForRefi));
+                setText('out-newConstructionLoan', formatCurrency(newConstructionLoanAmount));
+                setText('out-totalPhase2Need', formatCurrency(totalPhase2Need));
+                setText('out-cashToDeveloper', formatCurrency(cashToDeveloperAtRefi));
+                setText('out-phase2Committed', formatCurrency(totalPhase2Committed));
+                setText('out-phase2RemainingGap', formatCurrency(phase2RemainingGap));
+
+                // Investor Summary
+                const totalInvestorCapital = totalPhase1Committed + totalPhase2Committed;
+                setText('out-totalInvestorCapital', formatCurrency(totalInvestorCapital));
+                setText('out-totalInvestorInterest', formatCurrency(totalInvestorInterest));
+
+            } catch (e) {
+                console.error("Error in proforma calculation: ", e);
+            }
+        }
+        
+        // Renaming formatCurrency to formatC to fix typo from merge
+        function formatC(num) {
+            return formatCurrency(num);
+        }
+
+        // --- Share Link & Read-Only Logic ---
+
+        function populateForm(data) {
+            // Populate standard fields
+            const standardFields = [
+                'projectAddress', 'projectDescription', 'purchasePrice', 'renovationBudget', 'expectedResalePrice',
+                'permitPhaseMonths', 'constructionPhaseMonths', 'rentalIncomeMonthly', 'rentalMonths',
+                'purchaseLoanLTV', 'purchaseLoanInterestRate', 'purchaseLoanPoints',
+                'constructionLoanLTV', 'constructionLoanInterestRate', 'constructionLoanPoints',
+                'acquisitionCosts', 'salesCommission', 'propertyTaxRate', 'monthlyUtilities', 'monthlyInsurance'
+            ];
+            
+            standardFields.forEach(key => {
+                if (data.hasOwnProperty(key)) {
+                    const el = document.getElementById(key);
+                    if (el) el.value = data[key];
+                }
+            });
+
+            // Populate dynamic investor rows
+            if (data.investors && Array.isArray(data.investors)) {
+                // Clear any default/existing rows
+                document.getElementById('investorList').innerHTML = '';
+                data.investors.forEach(invData => {
+                    // Re-adjust rate from 0.12 to 12 for the input
+                    invData.rate = invData.rate * 100;
+                    addInvestorRow(invData);
+                });
+            }
+            
+            calculateProforma();
+        }
+
+        function setReadOnlyMode() {
+            document.querySelectorAll('.form-column input, .form-column textarea, .form-column select').forEach(el => {
+                el.disabled = true;
+            });
+            document.querySelectorAll('.remove-investor-btn, #addInvestorButton, #shareSection').forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+        }
+
+        function generateShareLink() {
+            const data = {
+                // Project & Resale
+                projectAddress: getString('projectAddress'),
+                projectDescription: getString('projectDescription'),
+                purchasePrice: getNum('purchasePrice'),
+                renovationBudget: getNum('renovationBudget'),
+                expectedResalePrice: getNum('expectedResalePrice'),
+                // Timeline
+                permitPhaseMonths: getNum('permitPhaseMonths'),
+                constructionPhaseMonths: getNum('constructionPhaseMonths'),
+                // Rental Income
+                rentalIncomeMonthly: getNum('rentalIncomeMonthly'),
+                rentalMonths: getNum('rentalMonths'),
+                // Phase 1 Loan
+                purchaseLoanLTV: getNum('purchaseLoanLTV'),
+                purchaseLoanInterestRate: getNum('purchaseLoanInterestRate'),
+                purchaseLoanPoints: getNum('purchaseLoanPoints'),
+                // Phase 2 Loan
+                constructionLoanLTV: getNum('constructionLoanLTV'),
+                constructionLoanInterestRate: getNum('constructionLoanInterestRate'),
+                constructionLoanPoints: getNum('constructionLoanPoints'),
+                // Other Costs
+                acquisitionCosts: getNum('acquisitionCosts'),
+                salesCommission: getNum('salesCommission'),
+                propertyTaxRate: getNum('propertyTaxRate'),
+                monthlyUtilities: getNum('monthlyUtilities'),
+                monthlyInsurance: getNum('monthlyInsurance'),
+                // Investors
+                investors: getInvestorData() // getInvestorData() already returns rates as 0.12, which is good
+            };
+
+            try {
+                const json = JSON.stringify(data);
+                const encodedData = encodeURIComponent(btoa(json));
+                const link = window.location.origin + window.location.pathname + '?data=' + encodedData;
+                
+                const inputEl = document.getElementById('shareLinkInput');
+                inputEl.value = link;
+                inputEl.select();
+                document.execCommand('copy');
+                
+                const confirmation = document.getElementById('copyConfirmation');
+                confirmation.classList.remove('hidden');
+                setTimeout(() => { confirmation.classList.add('hidden'); }, 2000);
+
+            } catch (e) {
+                console.error("Error generating share link: ", e);
+                alert("Could not generate share link.");
+            }
+        }
+
+        // --- Main page load logic ---
+        window.onload = function() {
+            document.getElementById('addInvestorButton').addEventListener('click', () => addInvestorRow());
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('data');
+
+            if (dataParam) {
+                // INVESTOR VIEW
+                try {
+                    const decodedData = atob(decodeURIComponent(dataParam));
+                    const data = JSON.parse(decodedData);
+                    populateForm(data);
+                    setReadOnlyMode();
+                } catch (e) {
+                    console.error('Failed to parse share link data:', e);
+                    calculateProforma(); // Fallback to default
+                }
+            } else {
+                // DEVELOPER VIEW
+                // Add two default investor rows for the demo
+                addInvestorRow({ amount: 500000, rate: 12, phase: 1 });
+                addInvestorRow({ amount: 500000, rate: 12, phase: 1 });
+                calculateProforma();
+                document.getElementById('generateLinkButton').addEventListener('click', generateShareLink);
             }
         };
     </script>
 
 </body>
 </html>
+
